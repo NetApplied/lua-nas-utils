@@ -1,9 +1,9 @@
- -- nas-utils.string
+ -- nas-utils.strings
 
-local NASString = {}
+local NASStrings = {}
 
-NASString._Authors= "Michael Stephan"
-NASString._Version = "0.3-1"
+NASStrings._Authors= "Michael Stephan"
+NASStrings._Version = "0.3-1"
 
 local sub = string.sub
 local gsub = string.gsub
@@ -49,7 +49,7 @@ end
 --- @param s string
 --- @param n integer
 --- @return string
-function NASString.shift(s, n)  -- positive for right, negative for left
+function NASStrings.shift(s, n)  -- positive for right, negative for left
     local len = #s
     if len == 0 then
         return s
@@ -74,7 +74,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.islower(s)
+function NASStrings.islower(s)
     local matched = match(s, "^[%l%s%p]+$")
     return matched and true or false
 end
@@ -83,7 +83,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.isupper(s)
+function NASStrings.isupper(s)
     local matched = match(s, "^[%u%s%p]+$")
     return matched and true or false
 end
@@ -93,7 +93,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.isdigit(s)
+function NASStrings.isdigit(s)
     local matched = match(s, "^%d+$")
     return matched and true or false
 end
@@ -102,7 +102,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.isinteger(s)
+function NASStrings.isinteger(s)
     local matched = match(s, "^[%-%+]?%d+$")
     return matched and true or false
 end
@@ -112,7 +112,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.ishex(s)
+function NASStrings.ishex(s)
     local matched = match(s, "^%x+$")
     return matched and true or false
 end
@@ -122,7 +122,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.isalnum(s)
+function NASStrings.isalnum(s)
     local matched = match(s, "^%w+$")
     return matched and true or false
 end
@@ -132,7 +132,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.istitle(s)
+function NASStrings.istitle(s)
     local matched = match(s, "^%u%l*$")
     return matched and true or false
 end
@@ -142,7 +142,7 @@ end
 --- --
 --- @param s string
 --- @return boolean
-function NASString.isfloat(s)
+function NASStrings.isfloat(s)
     local re = "^[%-%+]?%d*%.%d+$"
     return match(s, re) ~= nil
 end
@@ -151,7 +151,7 @@ end
 --- --
 --- @param s string
 --- @return string
-function NASString.lower(s)
+function NASStrings.lower(s)
     return lower(s)
 end
 
@@ -159,7 +159,7 @@ end
 --- --
 --- @param s string
 --- @return string
-function NASString.casefold(s)
+function NASStrings.casefold(s)
     return lower(s)
 end
 
@@ -167,7 +167,7 @@ end
 --- --
 --- @param s string
 --- @return string
-function NASString.upper(s)
+function NASStrings.upper(s)
     return upper(s)
 end
 
@@ -175,7 +175,7 @@ end
 --- --
 --- @param s string
 --- @return string
-function NASString.swapcase(s)
+function NASStrings.swapcase(s)
     local function swapchar(c)
         local lc = lower(c)
         return (lc == c) and upper(c) or lc
@@ -189,7 +189,7 @@ end
 --- --
 --- @param s string
 --- @return string
-function NASString.capitalize(s)
+function NASStrings.capitalize(s)
     if #s < 1 then
         return s
     end
@@ -209,7 +209,7 @@ local rep = string.rep
 --- @param s string
 --- @param delimiter? string
 --- @param n? integer # Default MaxInteger
-function NASString.split(s, delimiter, n)
+function NASStrings.split(s, delimiter, n)
     local result = {}
     delimiter = setupDelimiter(delimiter)
 
@@ -243,7 +243,7 @@ function NASString.split(s, delimiter, n)
     end
     return result
 end
-local split = NASString.split
+local split = NASStrings.split
 
 --- Divide s by `del` delimiter returning the left side,
 --- the delimiter and the right side.
@@ -251,7 +251,7 @@ local split = NASString.split
 --- @param s string
 --- @param del? string
 --- @return table<string> | nil
-function NASString.partition(s, del)
+function NASStrings.partition(s, del)
     local result = {}
     del = del or " "
     local delimiter = setupDelimiter(del)
@@ -280,7 +280,7 @@ local reverse = string.reverse
 --- @param delimiter string?
 --- @param n integer? # default is MaxInteger
 --- @return table<string>
-function NASString.rsplit(s, delimiter, n)
+function NASStrings.rsplit(s, delimiter, n)
     if not n then  -- if n is nil, Equivalent to split
         return split(s, delimiter)
     end
@@ -359,7 +359,7 @@ end
 ---
 --- @param del? string
 --- @return table<string> | nil
-function NASString.rpartition(s, del)
+function NASStrings.rpartition(s, del)
     local result = {}
     del = del or " "
     local rs = reverse(s)
@@ -378,12 +378,12 @@ function NASString.rpartition(s, del)
     end
 end
 
-local capitalize = NASString.capitalize
+local capitalize = NASStrings.capitalize
 --- Capitalize all of words in `s`.
 --- --
 --- @param s string
 --- @return string
-function NASString.title(s)
+function NASStrings.title(s)
     if #s < 1 then
         return s
     end
@@ -399,7 +399,7 @@ end
 --- --
 --- @param s string
 --- @return string
-function NASString.capwords(s)
+function NASStrings.capwords(s)
     local lines = split(s, "\n")
     local rLines = {}
     for i, line in ipairs(lines) do
@@ -419,7 +419,7 @@ end
 --- @param len integer
 --- @param ch? string # Default " "
 --- @return string
-function NASString.ljust(s, len, ch)
+function NASStrings.ljust(s, len, ch)
     ch = ch or " "
     if #ch ~= 1 then
         error(format("pad string master a single word, not %s", tostring(ch)))
@@ -439,7 +439,7 @@ end
 --- @param len integer
 --- @param ch? string # Default " "
 --- @return string
-function NASString.rjust(s, len, ch)
+function NASStrings.rjust(s, len, ch)
     ch = ch or " "
     if #ch ~= 1 then
         error(format("pad string master a single word, not %s", tostring(ch)))
@@ -459,7 +459,7 @@ end
 --- @param len integer
 --- @param ch? string # Default " "
 --- @return string
-function NASString.center(s, len, ch)
+function NASStrings.center(s, len, ch)
     ch = ch or " "
     if #ch ~= 1 then
         error(format("pad string master a single word, not %s", tostring(ch)))
@@ -476,13 +476,13 @@ function NASString.center(s, len, ch)
     end
 end
 
-local ljust = NASString.ljust
+local ljust = NASStrings.ljust
 --- Justify by left with zeros.
 --- --
 --- @param s string
 --- @param len integer
 --- @return string
-function NASString.zfill(s, len)
+function NASStrings.zfill(s, len)
     return ljust(s, len, "0")
 end
 
@@ -490,7 +490,7 @@ end
 --- --
 --- @param s string
 --- @return table<string>
-function NASString.splitlines(s)
+function NASStrings.splitlines(s)
     return split(s, '\n')
 end
 
@@ -499,7 +499,7 @@ end
 --- @param s string
 --- @param chars string?
 --- @return string
-function NASString.lstrip(s, chars)
+function NASStrings.lstrip(s, chars)
     local patten = concat({"^", setupPatten(chars), "+"})
     local _, ends = string_find(s, patten)
     if ends then
@@ -514,7 +514,7 @@ end
 --- @param s string
 --- @param chars string?
 --- @return string
-function NASString.rstrip(s, chars)
+function NASStrings.rstrip(s, chars)
     local patten = format("%s%s", setupPatten(chars), "+$")
     local last = string_find(s, patten)
     if last then
@@ -524,15 +524,15 @@ function NASString.rstrip(s, chars)
     end
 end
 
-local lstrip = NASString.lstrip
-local rstrip = NASString.rstrip
+local lstrip = NASStrings.lstrip
+local rstrip = NASStrings.rstrip
 --- Remove last and first `chars` string of `s`, it's a consecutive
 --- `lstrip` and `rstrip`.
 --- --
 --- @param s string
 --- @param chars string?
 --- @return string
-function NASString.strip(s, chars)
+function NASStrings.strip(s, chars)
     local res = lstrip(s, chars)
     return rstrip(res, chars)
 end
@@ -542,7 +542,7 @@ end
 --- @param delim string
 --- @param strings table<string>
 --- @return string
-function NASString.join(delim, strings)
+function NASStrings.join(delim, strings)
     return concat(strings, delim)
 end
 
@@ -551,7 +551,7 @@ end
 --- @param s1 string
 --- @param s2 string
 --- @return string | boolean
-function NASString.startswith(s1, s2)
+function NASStrings.startswith(s1, s2)
     return sub(s1,1, #s2) == s2
 end
 
@@ -560,7 +560,7 @@ end
 --- @param s1 string
 --- @param s2 string
 --- @return string | boolean
-function NASString.endswith(s1, s2)
+function NASStrings.endswith(s1, s2)
     return s2 == '' or sub(s1,-#s2) == s2
 end
 
@@ -572,7 +572,7 @@ end
 --- @param start? integer # Default 1
 --- @param stop? integer # Default -1 --> end
 --- @return integer
-function NASString.find(s1, s2, start, stop)
+function NASStrings.find(s1, s2, start, stop)
     start = start or 1
     stop = stop or -1
     s1 = sub(s1, start, stop)
@@ -581,7 +581,7 @@ function NASString.find(s1, s2, start, stop)
 end
 
 
-local pystring_find = NASString.find
+local pystring_find = NASStrings.find
 --- Get the first ocurrence of `s2` in `s1` beginning from `start`
 --- and finishing at `stop` but working with the reversed version of
 --- `s1`.
@@ -591,7 +591,7 @@ local pystring_find = NASString.find
 --- @param start? integer # Default 1
 --- @param stop? integer # Default -1 --> end
 --- @return integer
-function NASString.rfind(s1, s2, start, stop)
+function NASStrings.rfind(s1, s2, start, stop)
     start = start or 1
     stop = stop or -1
     s1 = sub(s1, start, stop)
@@ -632,7 +632,7 @@ end
 --- @param start integer
 --- @param stop integer
 --- @return integer
-function NASString.index(s1, s2, start, stop)
+function NASStrings.index(s1, s2, start, stop)
     local res = pystring_find(s1, s2, start, stop)
     if res < 0 then
         error(format("%s is  not in %s", tostring(s2), tostring(s1)))
@@ -640,7 +640,7 @@ function NASString.index(s1, s2, start, stop)
     return res
 end
 
-local pystring_rfind = NASString.rfind
+local pystring_rfind = NASStrings.rfind
 --- Get the index of first `s2` ocurrence in `s1` beginning from `start`
 --- and ending at `stop`
 --- --
@@ -649,7 +649,7 @@ local pystring_rfind = NASString.rfind
 --- @param start integer
 --- @param stop integer
 --- @return integer
-function NASString.rindex(s1, s2, start, stop)
+function NASStrings.rindex(s1, s2, start, stop)
     local res = pystring_rfind(s1, s2, start, stop)
     if res < 0 then
         error(format("%s is  not in %s", tostring(s2), tostring(s1)))
@@ -664,7 +664,7 @@ local gmatch = string.gmatch
 --- @param s string
 --- @param find string
 --- @return integer
-function NASString.count(s, find)
+function NASStrings.count(s, find)
     local i = 0
     local patten = setupPatten(find)
     for _ in gmatch(s, patten) do
@@ -682,7 +682,7 @@ local gsub = string.gsub
 --- @param repl string # Replacement
 --- @param n integer? # Number of occurrences until stop counting.
 --- @return string, integer
-function NASString.replace(s, find, repl, n)
+function NASStrings.replace(s, find, repl, n)
     local patten = setupPatten(find)
     repl = setupRepl(repl)
 
@@ -694,7 +694,7 @@ end
 --- @param s string
 --- @param tabs? integer # Default is 4
 --- @return string, integer
-function NASString.expandtabs(s, tabs)
+function NASStrings.expandtabs(s, tabs)
     tabs = tabs or 4
     local repl = rep(" ", tabs)
     return gsub(s, "\t", repl)
@@ -725,7 +725,7 @@ local io_open = io.open
 --- @param executor function? # Function that works with the file descriptor,
 --- @param file_opt string? # File options. See `io.open`, default `r`
 --- @return any
-function NASString.with(file_name, mode, executor, file_opt)
+function NASStrings.with(file_name, mode, executor, file_opt)
     mode = mode or "raw"
     file_opt = file_opt or "r"
 
@@ -777,4 +777,4 @@ function NASString.with(file_name, mode, executor, file_opt)
     return r
 end
 
-return NASString
+return NASStrings
