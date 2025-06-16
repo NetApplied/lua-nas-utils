@@ -32,11 +32,7 @@ build = {
       ["nas-utils.logging.rsyslog"] = "nas-utils/logging/rsyslog.lua",
       ["nas-utils.logging.socket"] = "nas-utils/logging/socket.lua",
       ["nas-utils.logging.sql"] = "nas-utils/logging/sql.lua",
-      ["nas-utils.rrule"] = "nas-utils/rrule.lua",
-      ["nas-utils.strings"] = "nas-utils/strings.lua",
-      ["tests.test_nas_utils_crypto"] = "tests/test_nas_utils_crypto.lua",
-      ["tests.test_nas_utils_helpers"] = "tests/test_nas_utils_helpers.lua",
-      ["tests.test_nas_utils_strings"] = "tests/test_nas_utils_strings.lua"
+      ["nas-utils.strings"] = "nas-utils/strings.lua"
    },
    copy_directories = {
       "tests"
