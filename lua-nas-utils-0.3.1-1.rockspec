@@ -1,12 +1,12 @@
 package = "lua-nas-utils"
-version = "0.3-1"
+version = "0.3.1-1"
 source = {
    url = "git+https://github.com/NetApplied/lua-nas-utils"
 }
 description = {
    homepage = "https://github.com/NetApplied/lua-nas-utils",
    license = "MIT",
-   summary = "Lua utility modules for working with cryptography, dates and time, strings, etc."
+   summary = "Lua utility for working with cryptography, dates and time, strings, etc."
 }
 dependencies = {
    "lua ~> 5.1",
@@ -18,9 +18,9 @@ dependencies = {
 build = {
    type = "builtin",
    modules = {
-      init = "init.lua",
       ["nas-utils.crypto"] = "nas-utils/crypto.lua",
       ["nas-utils.helpers"] = "nas-utils/helpers.lua",
+      ["nas-utils.init"] = "nas-utils/init.lua",
       ["nas-utils.logger_rolling_file"] = "nas-utils/logger_rolling_file.lua",
       ["nas-utils.logging.console"] = "nas-utils/logging/console.lua",
       ["nas-utils.logging.email"] = "nas-utils/logging/email.lua",
