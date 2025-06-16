@@ -1,0 +1,9 @@
+{
+    "Lua.workspace.library": [
+        "lua_modules/share/lua/5.1",
+        "${addons}/lua-cjson/module/library",
+        "${addons}/luaunit/module/library",
+        "${addons}/luasocket/module/library"
+    ],
+    "Lua.workspace.checkThirdParty": false
+}
