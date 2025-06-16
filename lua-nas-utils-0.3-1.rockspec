@@ -1,11 +1,11 @@
 package = "lua-nas-utils"
 version = "0.3-1"
 source = {
-   url = "git+ssh://git@github.com/NetApplied/lua-nas-utils.git"
+   url = "git+https://github.com/NetApplied/lua-nas-utils"
 }
 description = {
-   homepage = "*** please enter a project homepage ***",
-   license = "*** please specify a license ***"
+   homepage = "https://github.com/NetApplied/lua-nas-utils",
+   license = "MIT"
 }
 dependencies = {
    "lua ~> 5.1",
