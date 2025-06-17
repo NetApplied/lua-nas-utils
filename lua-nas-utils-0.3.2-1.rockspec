@@ -1,8 +1,8 @@
 package = "lua-nas-utils"
-version = "0.3.1-1"
+version = "0.3.2-1"
 source = {
    url = "git+https://github.com/NetApplied/lua-nas-utils",
-   tag = "v0.3.1",
+   tag = "v0.3.2",
 }
 description = {
    homepage = "https://github.com/NetApplied/lua-nas-utils",
@@ -28,7 +28,6 @@ build = {
       ["nas-utils.logging.email"] = "nas-utils/logging/email.lua",
       ["nas-utils.logging.envconfig"] = "nas-utils/logging/envconfig.lua",
       ["nas-utils.logging.file"] = "nas-utils/logging/file.lua",
-      ["nas-utils.logging.log_level"] = "nas-utils/logging/log_level.lua",
       ["nas-utils.logging.logging"] = "nas-utils/logging/logging.lua",
       ["nas-utils.logging.nginx"] = "nas-utils/logging/nginx.lua",
       ["nas-utils.logging.rolling_file"] = "nas-utils/logging/rolling_file.lua",

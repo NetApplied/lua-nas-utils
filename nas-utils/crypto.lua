@@ -4,7 +4,7 @@
 local NASCrypto      = {}
 
 NASCrypto._AUTHORS   = "Michael Stephan"
-NASCrypto._VERSION   = "0.3.1-1"
+NASCrypto._VERSION   = "0.3.2-1"
 NASCrypto._LICENSE   = "MIT License"
 NASCrypto._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
 
@@ -16,138 +16,6 @@ local replace        = require("nas-utils.strings").replace
 local b64encode      = require("mime").b64
 local b64decode      = require("mime").unb64
 
-
---[[
-********************
-*** CRYPTO ENUMS ***
-********************
-]]
-
--- Ciphers enumeration of supported ciphers
----@enum NASCrypto_CipherType
-NASCrypto.CipherType = {
-  AES_128_CBC = {
-    name = 'aes-128-cbc',
-    key_length = 16,
-    iv_length = 16,
-    has_tag = false
-  },
-  AES_192_CBC = {
-    name = 'aes-192-cbc',
-    key_length = 24,
-    iv_length = 16,
-    has_tag = false
-  },
-  AES_256_CBC = {
-    name = 'aes-256-cbc',
-    key_length = 32,
-    iv_length = 16,
-    has_tag = false
-  },
-  DES_CBC = {
-    name = 'des-cbc',
-    key_length = 8,
-    iv_length = 8,
-    has_tag = false
-  },
-  DES_EDE3_CBC = {
-    name = 'des-ede3-cbc',
-    key_length = 24,
-    iv_length = 8,
-    has_tag = false
-  },
-  BF_CBC = {
-    name = 'bf-cbc',
-    key_length = 16,
-    iv_length = 8,
-    has_tag = false
-  },
-  BF_OFB = {
-    name = 'bf-ofb',
-    key_length = 16,
-    iv_length = 8,
-    has_tag = false
-  },
-  RC4 = {
-    name = 'rc4',
-    key_length = 16,
-    iv_length = 0,
-    has_tag = false
-  },
-  CAMELLIA_128_CBC = {
-    name = 'camellia-128-cbc',
-    key_length = 16,
-    iv_length = 16,
-    has_tag = false
-  },
-  CAMELLIA_192_CBC = {
-    name = 'camellia-192-cbc',
-    key_length = 24,
-    iv_length = 16,
-    has_tag = false
-  },
-  CAMELLIA_256_CBC = {
-    name = 'camellia-256-cbc',
-    key_length = 32,
-    iv_length = 16,
-    has_tag = false
-  },
-  AES_128_GCM = {
-    name = 'aes-128-gcm',
-    key_length = 16,
-    iv_length = 12,
-    has_tag = true
-  },
-  AES_192_GCM = {
-    name = 'aes-192-gcm',
-    key_length = 24,
-    iv_length = 12,
-    has_tag = true
-  },
-  AES_256_GCM = {
-    name = 'aes-256-gcm',
-    key_length = 32,
-    iv_length = 12,
-    has_tag = true
-  }
-}
-
--- Digest Type enum of supported digest algorithms
----@enum NASCrypto_DigestType
-NASCrypto.DigestType = {
-  BLAKE2B512 = "blake2b512",
-  BLAKE2S256 = "blake2s256",
-  MD4 = "md4",
-  MD5 = "md5",
-  MDC2 = "mdc2",
-  RMD160 = "rmd160",
-  SHA1 = "sha1",
-  SHA224 = "sha224",
-  SHA256 = "sha256",
-  SHA384 = "sha384",
-  SHA512 = "sha512",
-  SHA512_224 = "sha512-224",
-  SHA512_256 = "sha512-256",
-  SHA3_224 = "sha3-224",
-  SHA3_256 = "sha3-256",
-  SHA3_384 = "sha3-384",
-  SHA3_512 = "sha3-512",
-  SHAKE128 = "shake128",
-  SHAKE256 = "shake256",
-  SM3 = "sm3",
-}
-
--- Function that recieves a cipher name and returns corresponding NASCrypto_CipherType table
----@param cipher_name string The name of the role to retrieve.
----@return NASCrypto_CipherType? cipher The corresponding cipher table or nil if not found
-function NASCrypto.get_cipher_by_name(cipher_name)
-  for _, cipher_type in ipairs(NASCrypto.CipherType) do
-    if string.upper(cipher_type.name) == string.upper(cipher_name) then
-      return cipher_type
-    end
-  end
-  return nil
-end
 
 --[[
 ********************
@@ -202,7 +70,7 @@ function NASCrypto.base64decode(data, url_safe)
 end
 
 -- Encrypts data using the specified cipher. If cipher uses GCM mode, a tag is generated.
----@param cipher_type table NASCrypto_CipherType to use for encryption.
+---@param cipher_type table Enum_CipherType to use for encryption.
 ---@param data string Data to be encrypted
 ---@param key string Encryption key of appropriate length
 ---@param iv? string Initialization vector of appropriate length. Generated if not provided
@@ -216,7 +84,7 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   end
 
   if type(cipher_type) ~= "table" then
-    error("cipher_enum parameter must be NASCrypto_CipherType table")
+    error("cipher_enum parameter must be Enum_CipherType table")
   end
 
   -- Ensure the key and IV are of appropriate length for the chosen cipher
@@ -272,7 +140,7 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 end
 
 -- Decrypts data using the specified cipher. If cipher uses GCM, a tag must be provided.
----@param cipher_type table NASCrypto_CipherType to use for encryption.
+---@param cipher_type table Enum_CipherType to use for encryption.
 ---@param encrypted_data string Data to be decrypted
 ---@param key string Encryption key of appropriate length
 ---@param iv string Initialization vector of appropriate length.
@@ -286,7 +154,7 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   end
 
   if type(cipher_type) ~= "table" then
-    error("cipher_enum parameter must be NASCrypto_CipherType table")
+    error("cipher_enum parameter must be Enum_CipherType table")
   end
 
   if cipher_type.has_tag and tag == nil then

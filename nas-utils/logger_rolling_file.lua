@@ -3,7 +3,7 @@
 local LoggerRollingFile      = {}
 
 LoggerRollingFile._AUTHORS   = "Michael Stephan"
-LoggerRollingFile._VERSION   = "0.3.1-1"
+LoggerRollingFile._VERSION   = "0.3.2-1"
 LoggerRollingFile._LICENSE   = "MIT License"
 LoggerRollingFile._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
 
@@ -23,8 +23,8 @@ require "nas-utils.logging.rolling_file"
 -- - logLevel: "INFO"
 --
 --  @param: config_table - table with configuration values for the logger, or default values
----@param config_table {filename: string, maxFileSize: number, maxBackupIndex: number,
----timestampPattern: string, logLevel: string}?
+---@param config_table {filename: string?, maxFileSize: number?, maxBackupIndex: number?,
+---timestampPattern: string?, logLevel: string?}?
 ---@return nas-utils.logging.rolling_file logger instance
 function LoggerRollingFile.get_log(config_table)
     config_table = config_table or {}
@@ -46,7 +46,7 @@ return LoggerRollingFile
 --[[
 
 usage:
-local log = require("services.LoggerService").log
+local log = require("nas-utils").logger_rolling_file({filename = "app.log"})
 log:debug("This is a debug message")
 log:info("This is an info message")
 log:warn("This is a warning message")
