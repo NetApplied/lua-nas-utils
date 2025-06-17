@@ -13,7 +13,8 @@ dependencies = {
    "lua-cjson ~> 2.1",
    "inspect ~> 3.1",
    "luasocket ~> 3.1",
-   "luaunit ~> 3.4"
+   "luaunit ~> 3.4",
+   "luaossl ~> 20220711"
 }
 build = {
    type = "builtin",
