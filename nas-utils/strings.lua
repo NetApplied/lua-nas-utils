@@ -1,9 +1,12 @@
- -- nas-utils.strings
+-- nas-utils.strings.lua
 
-local NASStrings = {}
+local NASStrings      = {}
 
-NASStrings._Authors= "Michael Stephan"
-NASStrings._Version = "0.3-1"
+NASStrings._AUTHORS   = "Michael Stephan"
+NASStrings._VERSION   = "0.3.1-1"
+NASStrings._LICENSE   = "MIT License"
+NASStrings._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+
 
 local sub = string.sub
 local gsub = string.gsub
@@ -40,7 +43,7 @@ local function setupRepl(repl)
     if type(repl) ~= "string" then
         error("repl must be a string.")
     else
-        return gsub(repl, "([%W])", "%%%1")  -- repl:gsub("([%W])", "%%%1")
+        return gsub(repl, "([%W])", "%%%1") -- repl:gsub("([%W])", "%%%1")
     end
 end
 
@@ -49,7 +52,7 @@ end
 --- @param s string
 --- @param n integer
 --- @return string
-function NASStrings.shift(s, n)  -- positive for right, negative for left
+function NASStrings.shift(s, n) -- positive for right, negative for left
     local len = #s
     if len == 0 then
         return s
@@ -57,12 +60,12 @@ function NASStrings.shift(s, n)  -- positive for right, negative for left
     n = n % len
     if n == 0 then
         return s
-    elseif n > 0 then  -- "abcd >> 1"
+    elseif n > 0 then -- "abcd >> 1"
         local offset = len - n
         local s1 = sub(s, offset + 1)
         local s2 = sub(s, 1, offset)
         return format("%s%s", s1, s2)
-    else   -- "abcd << 1"
+    else -- "abcd << 1"
         local offset = len + n
         local s1 = sub(s, offset + 1)
         local s2 = sub(s, 1, offset)
@@ -88,7 +91,7 @@ function NASStrings.isupper(s)
     return matched and true or false
 end
 
---- If the string has only digits it returns true, otherwise it will be 
+--- If the string has only digits it returns true, otherwise it will be
 --- false.
 --- --
 --- @param s string
@@ -107,7 +110,7 @@ function NASStrings.isinteger(s)
     return matched and true or false
 end
 
---- If the string is an hexadecimal expression, the function returns true, 
+--- If the string is an hexadecimal expression, the function returns true,
 --- otherwise it returns false.
 --- --
 --- @param s string
@@ -117,7 +120,7 @@ function NASStrings.ishex(s)
     return matched and true or false
 end
 
---- If the string is a combination of alfanumeric characters, the function 
+--- If the string is a combination of alfanumeric characters, the function
 --- returns true, otherwise it returns false.
 --- --
 --- @param s string
@@ -181,7 +184,7 @@ function NASStrings.swapcase(s)
         return (lc == c) and upper(c) or lc
     end
 
-    local result = gsub(s,"%a", swapchar)
+    local result = gsub(s, "%a", swapchar)
     return result
 end
 
@@ -217,7 +220,7 @@ function NASStrings.split(s, delimiter, n)
     local beg = 1
     local c = 1
 
-    if n then  --n must be an integer greater than 0
+    if n then --n must be an integer greater than 0
         if type(n) ~= "number" or n <= 0 or n ~= floor(n) then
             error(format("bad input %s", tostring(n)))
         end
@@ -225,7 +228,7 @@ function NASStrings.split(s, delimiter, n)
 
     while (true) do
         local iBeg, iEnd = string_find(s, delimiter, beg)
-        if (iBeg) then  -- matched
+        if (iBeg) then -- matched
             result[c] = sub(s, beg, iBeg - 1)
             c = c + 1
             beg = iEnd + 1
@@ -243,6 +246,7 @@ function NASStrings.split(s, delimiter, n)
     end
     return result
 end
+
 local split = NASStrings.split
 
 --- Divide s by `del` delimiter returning the left side,
@@ -281,7 +285,7 @@ local reverse = string.reverse
 --- @param n integer? # default is MaxInteger
 --- @return table<string>
 function NASStrings.rsplit(s, delimiter, n)
-    if not n then  -- if n is nil, Equivalent to split
+    if not n then -- if n is nil, Equivalent to split
         return split(s, delimiter)
     end
 
@@ -291,19 +295,19 @@ function NASStrings.rsplit(s, delimiter, n)
 
     local result = {}
     local len = #s + 1
-    if len >= criticalSizeofReverse then  -- a big string? Reversing a string can be time-consuming
+    if len >= criticalSizeofReverse then -- a big string? Reversing a string can be time-consuming
         local res = split(s, delimiter)
         local resLen = #res
-        n = n + 1  -- The length of the returned array is equal to the number of splits plus one
+        n = n + 1 -- The length of the returned array is equal to the number of splits plus one
         if resLen <= n then
             return res
         end
 
-        if delimiter then  -- not blank?
+        if delimiter then   -- not blank?
             result[1] = concat(res, delimiter, 1, resLen - n + 1)
-        else  -- blank,
+        else                -- blank,
             local cells = {}
-            local pos = nil     -- MJS 20250613 changed to satisfy LLS
+            local pos = nil -- MJS 20250613 changed to satisfy LLS
             pos = 1
             local next
             local c = 1
@@ -337,7 +341,7 @@ function NASStrings.rsplit(s, delimiter, n)
     while (true) do
         local iBeg, iEnd = string_find(rs, rDel, beg)
         if (iBeg) then
-            result[c] = sub(s, len - (iBeg - 1),len - beg)
+            result[c] = sub(s, len - (iBeg - 1), len - beg)
             c = c + 1
             beg = iEnd + 1
             nums = nums + 1
@@ -445,7 +449,7 @@ function NASStrings.rjust(s, len, ch)
         error(format("pad string master a single word, not %s", tostring(ch)))
     end
     local delta = len - #s
-    if delta > 0  then
+    if delta > 0 then
         local pad = rep(ch, delta)
         return format("%s%s", s, pad)
     else
@@ -469,7 +473,7 @@ function NASStrings.center(s, len, ch)
         local left = floor(delta / 2)
         local right = delta - left
 
-        local res = {rep(ch, left), s, rep(ch, right)}
+        local res = { rep(ch, left), s, rep(ch, right) }
         return concat(res)
     else
         return s
@@ -494,13 +498,13 @@ function NASStrings.splitlines(s)
     return split(s, '\n')
 end
 
---- Remove first `chars` string of `s`. 
+--- Remove first `chars` string of `s`.
 --- --
 --- @param s string
 --- @param chars string?
 --- @return string
 function NASStrings.lstrip(s, chars)
-    local patten = concat({"^", setupPatten(chars), "+"})
+    local patten = concat({ "^", setupPatten(chars), "+" })
     local _, ends = string_find(s, patten)
     if ends then
         return sub(s, ends + 1, -1)
@@ -552,7 +556,7 @@ end
 --- @param s2 string
 --- @return string | boolean
 function NASStrings.startswith(s1, s2)
-    return sub(s1,1, #s2) == s2
+    return sub(s1, 1, #s2) == s2
 end
 
 --- Check if `s1` ends with `s2`.
@@ -561,7 +565,7 @@ end
 --- @param s2 string
 --- @return string | boolean
 function NASStrings.endswith(s1, s2)
-    return s2 == '' or sub(s1,-#s2) == s2
+    return s2 == '' or sub(s1, - #s2) == s2
 end
 
 --- Get the first ocurrence of `s2` in `s1` beginning from `start`
@@ -580,7 +584,6 @@ function NASStrings.find(s1, s2, start, stop)
     return res or -1
 end
 
-
 local pystring_find = NASStrings.find
 --- Get the first ocurrence of `s2` in `s1` beginning from `start`
 --- and finishing at `stop` but working with the reversed version of
@@ -598,9 +601,9 @@ function NASStrings.rfind(s1, s2, start, stop)
 
     local len = #s1
 
-    if len >= criticalSizeofReverse then  --  a big string?
+    if len >= criticalSizeofReverse then --  a big string?
         local res = -1
-        local current_pos = nil   -- MJS 20250613 changed to satisfy LLS
+        local current_pos = nil          -- MJS 20250613 changed to satisfy LLS
         current_pos = 0
 
         while true do
@@ -739,7 +742,7 @@ function NASStrings.with(file_name, mode, executor, file_opt)
         end
     end
 
-    if match(file_opt, 'w') or match(file_opt,'a') then
+    if match(file_opt, 'w') or match(file_opt, 'a') then
         error("pystring.with doesn't work with writing mode files")
     end
 
@@ -768,7 +771,7 @@ function NASStrings.with(file_name, mode, executor, file_opt)
             r = executor(_raw_file)
         else
             f:close()
-            error(format('Invalid mode = %s option',mode))
+            error(format('Invalid mode = %s option', mode))
         end
     else
         error(format("Problems opening %s", tostring(file_name)))

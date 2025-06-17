@@ -1,17 +1,20 @@
--- nas-utils.crypto
+-- nas-utils.crypto.lua
 --TODO: HMAC function for HMAC-SHA256
 
-local socket = require("socket")         -- luasocket
-local rand = require("openssl.rand")     -- luaossl
-local cipher = require("openssl.cipher") -- luaossl
-local hmac = require("openssl.hmac")     -- luaossl
-local replace = require("nas-utils.strings").replace
-local b64encode = require("mime").b64
-local b64decode = require("mime").unb64
+local NASCrypto      = {}
 
-local NASCrypto = {}
-NASCrypto._AUTHORS = "Michael Stephan"
-NASCrypto._VERSION = "0.3-1"
+NASCrypto._AUTHORS   = "Michael Stephan"
+NASCrypto._VERSION   = "0.3.1-1"
+NASCrypto._LICENSE   = "MIT License"
+NASCrypto._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+
+local socket         = require("socket") -- luasocket
+local rand           = require("openssl.rand") -- luaossl
+local cipher         = require("openssl.cipher") -- luaossl
+local hmac           = require("openssl.hmac") -- luaossl
+local replace        = require("nas-utils.strings").replace
+local b64encode      = require("mime").b64
+local b64decode      = require("mime").unb64
 
 
 --[[

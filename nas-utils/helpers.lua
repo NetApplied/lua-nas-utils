@@ -1,11 +1,14 @@
--- nas-utils.helpers
+-- nas-utils.helpers.lua
 
-local NASHelpers = {}
-local socket = require("socket")     -- luasocket
-local rand = require("openssl.rand") -- luaossl
+local NASHelpers      = {}
 
-NASHelpers._AUTHORS = "Michael Stephan"
-NASHelpers._VERSION = "0.3-1"
+NASHelpers._AUTHORS   = "Michael Stephan"
+NASHelpers._VERSION   = "0.3.1-1"
+NASHelpers._LICENSE   = "MIT License"
+NASHelpers._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+
+local socket          = require("socket") -- luasocket
+local rand            = require("openssl.rand") -- luaossl
 
 
 --[[

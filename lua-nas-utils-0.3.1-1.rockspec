@@ -26,6 +26,7 @@ build = {
       ["nas-utils.logging.email"] = "nas-utils/logging/email.lua",
       ["nas-utils.logging.envconfig"] = "nas-utils/logging/envconfig.lua",
       ["nas-utils.logging.file"] = "nas-utils/logging/file.lua",
+      ["nas-utils.logging.log_level"] = "nas-utils/logging/log_level.lua",
       ["nas-utils.logging.logging"] = "nas-utils/logging/logging.lua",
       ["nas-utils.logging.nginx"] = "nas-utils/logging/nginx.lua",
       ["nas-utils.logging.rolling_file"] = "nas-utils/logging/rolling_file.lua",

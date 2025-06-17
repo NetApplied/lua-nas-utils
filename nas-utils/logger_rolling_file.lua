@@ -1,12 +1,16 @@
--- nas-utils.logger_rolling_file
+-- nas-utils.logger_rolling_file.lua
+
+local LoggerRollingFile      = {}
+
+LoggerRollingFile._AUTHORS   = "Michael Stephan"
+LoggerRollingFile._VERSION   = "0.3.1-1"
+LoggerRollingFile._LICENSE   = "MIT License"
+LoggerRollingFile._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+
 
 ---@diagnostic disable-next-line: undefined-doc-name
 ---@alias nas-utils.logging.rolling_file logging.rolling_file
-require"nas-utils.logging.rolling_file"
-
-local LoggerRollingFile = {}
-LoggerRollingFile._Authors = "Michael Stephan"
-LoggerRollingFile._Version = "0.3-1"
+require "nas-utils.logging.rolling_file"
 
 
 -- Get rolling file logger instance
@@ -19,7 +23,7 @@ LoggerRollingFile._Version = "0.3-1"
 -- - logLevel: "INFO"
 --
 --  @param: config_table - table with configuration values for the logger, or default values
----@param config_table {filename: string, maxFileSize: number, maxBackupIndex: number, 
+---@param config_table {filename: string, maxFileSize: number, maxBackupIndex: number,
 ---timestampPattern: string, logLevel: string}?
 ---@return nas-utils.logging.rolling_file logger instance
 function LoggerRollingFile.get_log(config_table)
@@ -33,9 +37,7 @@ function LoggerRollingFile.get_log(config_table)
     config_table.logLevel = config_table.logLevel or "INFO"
 
     return logging.rolling_file(config_table)
-
 end
-
 
 return LoggerRollingFile
 
@@ -54,22 +56,22 @@ log:fatal("This is a fatal message")
 
 Constants - logLevel:
 logger.DEBUG
-The DEBUG level designates fine-grained informational events that are most useful to debug 
+The DEBUG level designates fine-grained informational events that are most useful to debug
 an application.
 
 logger.INFO
-The INFO level designates informational messages that highlight the progress of the 
+The INFO level designates informational messages that highlight the progress of the
 application at coarse-grained level.
 
 logger.WARN
 The WARN level designates potentially harmful situations.
 
 logger.ERROR
-The ERROR level designates error events that might still allow the application to continue 
+The ERROR level designates error events that might still allow the application to continue
 running.
 
 logger.FATAL
-The FATAL level designates very severe error events that would presumably lead the 
+The FATAL level designates very severe error events that would presumably lead the
 application to abort.
 
 logger.OFF
