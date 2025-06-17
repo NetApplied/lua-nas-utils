@@ -1,2 +1,2 @@
 # lua-nas-utils
-Lua utility modules for working with cryptography, dates and time, strings, etc.
+Lua utility modules for working with cryptography, dates, time, strings, etc.
