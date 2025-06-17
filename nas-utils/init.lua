@@ -32,7 +32,13 @@ modules.LogLevel  = {
 ----------------------
 -- Crypto Enumerations
 ----------------------
----@enum Enum_CipherType
+
+-- `Enum_CipherType` enum is available from `require("nas-utils").CipherType`
+---@alias Enum_CipherType {name: string, key_length: number, iv_length: number, 
+---has_tag: boolean}
+---
+-- @enum tag does not work with complex table, use @alias instead
+-- ---@enum Enum_CipherType
 modules.CipherType = {
   AES_128_CBC = {
     name = 'aes-128-cbc',

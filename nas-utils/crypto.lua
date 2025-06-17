@@ -69,13 +69,14 @@ function NASCrypto.base64decode(data, url_safe)
   return decoded
 end
 
+
 -- Encrypts data using the specified cipher. If cipher uses GCM mode, a tag is generated.
----@param cipher_type table Enum_CipherType to use for encryption.
+---@param cipher_type Enum_CipherType `Enum_CipherType` to use for encryption.
 ---@param data string Data to be encrypted
 ---@param key string Encryption key of appropriate length
----@param iv? string Initialization vector of appropriate length. Generated if not provided
----@param tag_length? number Length of the authentication tag. Max and default is 16 bytes
----@return table? encrypted_data {iv, encrypted_data, tag | nil}
+---@param iv string? Initialization vector of appropriate length. Generated if not provided
+---@param tag_length number? Length of the authentication tag. Max and default is 16 bytes
+---@return {iv: string, encrypted_data: string, tag: string? }? encrypted_table
 function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   tag_length = tag_length or 16 -- Default to 16 bytes if not specified
 
@@ -140,11 +141,11 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 end
 
 -- Decrypts data using the specified cipher. If cipher uses GCM, a tag must be provided.
----@param cipher_type table Enum_CipherType to use for encryption.
+---@param cipher_type Enum_CipherType `Enum_CipherType` to use for encryption.
 ---@param encrypted_data string Data to be decrypted
 ---@param key string Encryption key of appropriate length
 ---@param iv string Initialization vector of appropriate length.
----@param tag string? Authentication tag required if cipher uses GCM.
+---@param tag string? Optional authentication tag required if cipher uses GCM.
 ---@return string? Decrypted data or nil if decryption fails.
 function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   local decrypted_data = nil
