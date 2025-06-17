@@ -23,6 +23,40 @@ local b64decode      = require("mime").unb64
 ********************
 ]]
 
+
+-- Convert a byte string to hexadecimal
+---@param byte_string string Byte string to convert.
+---@param uppercase boolean? default true for uppercase hex (A-F), false for lowercase (a-f)
+---@return string hex_string Hexadecimal representation of the byte string.
+function NASCrypto.bin2hex(byte_string, uppercase)
+  if uppercase == nil then uppercase = true end
+
+  local hex = ""
+  local strformat = uppercase and "%02X" or "%02x" -- Choose format based on uppercase param
+  for i = 1, #byte_string do
+    hex = hex .. string.format(strformat, string.byte(byte_string, i))
+  end
+
+  return hex
+end
+
+
+-- Convert a hexadecimal string to byte string.
+-- Strips any colons, dashes, or spaces from the string.
+---@param hex_string string Hexadecimal string to convert into byte string.
+---@return string byte_string Byte representation of the hexadecimal string.
+function NASCrypto.hex2bin(hex_string)
+  -- Remove colons, dashes, and spaces from the hex string
+  hex_string = hex_string:gsub("[ %-:]", "")
+
+  local byteString = ""
+    for i = 1, #hex_string, 2 do
+        local byte = tonumber(hex_string:sub(i, i + 1), 16)
+        byteString = byteString .. string.char(byte)
+    end
+    return byteString
+end
+
 -- Base64 encoding with url safe option
 ---@param data string Data to encode
 ---@param url_safe boolean? Option to make the encoding URL-safe (default is false)
@@ -245,7 +279,7 @@ Parameters:
   - num_bytes: number?  - the number of bytes to generate a hex string from.
     If this is not specified, it will return a hex string of 16 bytes (32 hex chars).
   - uppercase: boolean? true for uppercase hex (A-F), false for lowercase (a-f)
-    If this is not specified, it will default to lowercase (a-f).
+    If this is not specified, it will default to uppercase (A-F).
 
 Returns:
   - A string of hex characters.
@@ -257,13 +291,15 @@ Throws:
 Example:
    - get_random_hex() - returns a hex string of 32 hex characters
    - get_random_hex(16) - returns a hex string of 32 hex characters
-   - get_random_hex(8, true) - returns a hex string of 16 uppercased hex characters
+   - get_random_hex(8, false) - returns a hex string of 16 lowercased hex characters
 ]]
 -- Function to generate a random hex string of specified byte length.
 ---@param num_bytes number? Number of random bytes to generate (2 hex chars), default is 16
----@param uppercase boolean? true for uppercase hex (A-F), false for lowercase (a-f)
+---@param uppercase boolean? default true for uppercase hex (A-F), false for lowercase (a-f)
 ---@return string Random hex string of specified byte length
 function NASCrypto.get_random_hex(num_bytes, uppercase)
+  if uppercase == nil then uppercase = true end
+
   if not rand.ready() then
     error("Random number generator is not properly seeded")
   end
@@ -275,12 +311,8 @@ function NASCrypto.get_random_hex(num_bytes, uppercase)
   num_bytes = num_bytes or 16
 
   local bytes = rand.bytes(num_bytes)
-  local hex = ""
-  local format_str = uppercase and "%02X" or "%02x" -- Choose format based on uppercase param
-  for i = 1, #bytes do
-    hex = hex .. string.format(format_str, string.byte(bytes, i))
-  end
-  return hex
+  
+  return NASCrypto.bin2hex(bytes, uppercase)
 end
 
 -- Generate a sequential GUID in the format unixtime_milliseconds-randhexbytes
@@ -289,6 +321,7 @@ end
 ---@return string SGUID sequential GUID
 function NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
   if uppercase == nil then uppercase = true end
+  
   local unixtime_milliseconds = NASCrypto.unixtime_milliseconds()
   local rand_hex = NASCrypto.get_random_hex(num_rand_bytes, uppercase)
 

@@ -14,6 +14,19 @@ Output:
 
 ---------
 
+> kdf = require"openssl.kdf"
+> options = {}
+> options.type = "argon2id"
+> options.outlen = 32
+> options.pass = "Hello"
+> options.salt = "NaCl1234"
+> options.iter = 10
+> options.maxmem_bytes = 8192
+> h = kdf.derive(options)
+> print(h)
+
+
+---------
 
 
 https://stackoverflow.com/questions/58431973/argon2-library-that-hashes-passwords-without-a-secret-and-with-a-random-salt-tha
