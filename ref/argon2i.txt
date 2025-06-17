@@ -1,0 +1,88 @@
+OpenSSL command:
+
+openssl kdf -keylen 32 -kdfopt pass:Hello -kdfopt salt:NaCl1234 -kdfopt iter:10 -kdfopt memcost:8192 argon2i
+
+Output:
+7D:78:F0:48:97:F5:33:2A:20:78:6B:F5:72:57:F7:D6:E7:53:7A:7A:98:83:15:EE:D3:DF:1F:E4:FE:CF:D4:B8
+
+https://stackoverflow.com/questions/58431973/argon2-library-that-hashes-passwords-without-a-secret-and-with-a-random-salt-tha
+Example of Python's implementation:
+
+1) The salt is random, using os.urandom. I thus wonder if the verify method is somehow able 
+to extract the salt from the hash?
+
+The hash method returns a string that encodes the salt, the parameters, and the password 
+hash itself, as shown in the documentation:
+
+>>> from argon2 import PasswordHasher
+>>> ph = PasswordHasher()
+>>> hash = ph.hash("s3kr3tp4ssw0rd")
+>>> hash  
+'$argon2id$v=19$m=102400,t=2,p=8$tSm+JOWigOgPZx/g44K5fQ$WDyus6py50bVFIPkjA28lQ'
+>>> ph.verify(hash, "s3kr3tp4ssw0rd")
+True
+
+The format is summarized in the Argon2 reference implementation; perhaps there are other 
+references. In this case:
+
+$argon2id$...
+The hash is Argon2id, which is the specific Argon2 variant that everyone should use 
+(combining the side channel resistance of Argon2i with the more difficult-to-crack Argon2d).
+
+...$v=19$...
+The version of the hash is 0x13 (19 decimal), meaning Argon2 v1.3, the version adopted by 
+the Password Hashing Competition.
+
+...$m=102400,t=2,p=8$...
+The memory use is 100 MB (102400 KB), the time is 2 iterations, and the parallelism is 8 ways.
+
+...$tSm+JOWigOgPZx/g44K5fQ$...
+The salt is tSm+JOWigOgPZx/g44K5fQ (base64), 
+or b5 29 be 24 e5 a2 80 e8  0f 67 1f e0 e3 82 b9 7d (hexadecimal).
+
+...$WDyus6py50bVFIPkjA28lQ
+The password hash itself is WDyus6py50bVFIPkjA28lQ (base64), 
+or 58 3c ae b3 aa 72 e7 46  d5 14 83 e4 8c 0d bc 95 (hexadecimal).
+
+The verify method takes this string and a candidate password, recomputes the password hash 
+with all the encoded parameters, and compares it to the encoded password hash.
+
+And if indeed Argon2 can extract the salt out of the hash, how is using a salt any safer 
+in that case since a hostile entity who gets a hashed password should then also be able to extract the salt?
+
+The purpose of the salt is to mitigate the batch advantage of multi-target attacks by simply 
+being different for each user.
+
+If everyone used the same salt, then an adversary trying to find the first of $n$ passwords 
+given hashes would need to spend only about $1/n$ the cost that an adversary trying to find 
+a single specific password given its hash would have to spend. Alternatively, an adversary 
+could accelerate breaking individual passwords by doing an expensive precomputation (rainbow tables).
+
+But if everyone uses a different salt, then that batch advantage or precomputation 
+advantage goes away.
+
+Choosing the salt uniformly at random among 32-byte strings is just an easy way to guarantee 
+every user has a distinct salt. In principle, one could imagine an authority handing out 
+everyone in the world a consecutive number to use as their Argon2 salt, but that system 
+doesn't scale very well—I don't just mean that your application could use the counting 
+authority, but every application in the world would have to use the same counting authority, 
+and I think the Count is too busy at Sesame Street to take on that job.
+
+2) By default I do not supply any secret to the hash method and instead the password itself 
+seems to be used as a secret. Is this secure? What are the downsides for me not supplying a 
+secret to the hashing method?
+
+Generally the password is the secret: if someone knows the password then they're supposed to 
+be able to log in; if they don't know the password, they're supposed to be shown the door!
+
+That said, Argon2 also supports a secret key, which is separate from the salt and separate 
+from the password.
+
+If there is a meaningful security boundary between your password database and your 
+application so that it's plausible an adversary might compromise one but not the other, 
+then the application can pick a uniform random 32-byte string as a secret key, and use that 
+with Argon2 so that the password hash is a secret function of the secret password.
+
+That way, an adversary who dumps the password database but not the application's secret key 
+won't even be able to test a guess for a password because they don't know the secret key 
+needed to compute a password's hash.
