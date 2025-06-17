@@ -1,9 +1,20 @@
 OpenSSL command:
-
+-- ARGON2I
 openssl kdf -keylen 32 -kdfopt pass:Hello -kdfopt salt:NaCl1234 -kdfopt iter:10 -kdfopt memcost:8192 argon2i
 
 Output:
 7D:78:F0:48:97:F5:33:2A:20:78:6B:F5:72:57:F7:D6:E7:53:7A:7A:98:83:15:EE:D3:DF:1F:E4:FE:CF:D4:B8
+
+-- ARGON2ID
+openssl kdf -keylen 32 -kdfopt pass:Hello -kdfopt salt:NaCl1234 -kdfopt iter:10 -kdfopt memcost:8192 argon2id
+
+Output:
+72:98:D7:97:5A:94:63:06:D2:F4:CC:DB:FC:3D:BF:46:4D:7A:1F:B4:38:46:5A:B5:D8:8A:9B:B5:A4:7A:99:61
+
+
+---------
+
+
 
 https://stackoverflow.com/questions/58431973/argon2-library-that-hashes-passwords-without-a-secret-and-with-a-random-salt-tha
 Example of Python's implementation:
