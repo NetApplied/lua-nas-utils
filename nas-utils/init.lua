@@ -1,5 +1,4 @@
 -- nas-utils.init.lua
--- TODO: Move enumerations into init.lua
 
 local modules               = {}
 

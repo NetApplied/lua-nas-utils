@@ -1,10 +1,12 @@
 # lua-nas-utils
 
-A collection of Lua utility modules for NAS systems, providing helpers for cryptography, string manipulation, logging, and more.
+A collection of Lua utility modules for NAS systems, providing helpers for cryptography, string manipulation, logging, and more.   
+
+*Note: This is a pre-1.0.0 release intended for initial development purposes. The public API is subject to change without notice and should not be considered stable.*
 
 ## Features
 
-- **Cryptography**: Hex, base64, password hashing, encryption/decryption, random generation.
+- **Cryptography**: Hex conversion, url-safe base64 encoding, password hashing, encryption/decryption, sequential GUID generation.
 - **String Utilities**: Python-style string methods, splitting, joining, case conversion, and more.
 - **Helpers**: Table, datetime, number, and system utilities.
 - **Logging**: Rolling file logger with configurable log levels and rotation.

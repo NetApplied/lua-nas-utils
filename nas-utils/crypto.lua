@@ -8,11 +8,10 @@ NASCrypto._VERSION   = "0.3.2-1"
 NASCrypto._LICENSE   = "MIT License"
 NASCrypto._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
 
-local socket         = require("socket") -- luasocket
-local rand           = require("openssl.rand") -- luaossl
+local socket         = require("socket")         -- luasocket
+local rand           = require("openssl.rand")   -- luaossl
 local cipher         = require("openssl.cipher") -- luaossl
-local hmac           = require("openssl.hmac") -- luaossl
-local replace        = require("nas-utils.strings").replace
+local hmac           = require("openssl.hmac")   -- luaossl
 local b64encode      = require("mime").b64
 local b64decode      = require("mime").unb64
 
@@ -40,7 +39,6 @@ function NASCrypto.bin2hex(byte_string, uppercase)
   return hex
 end
 
-
 -- Convert a hexadecimal string to byte string.
 -- Strips any colons, dashes, or spaces from the string.
 ---@param hex_string string Hexadecimal string to convert into byte string.
@@ -50,11 +48,11 @@ function NASCrypto.hex2bin(hex_string)
   hex_string = hex_string:gsub("[ %-:]", "")
 
   local byteString = ""
-    for i = 1, #hex_string, 2 do
-        local byte = tonumber(hex_string:sub(i, i + 1), 16)
-        byteString = byteString .. string.char(byte)
-    end
-    return byteString
+  for i = 1, #hex_string, 2 do
+    local byte = tonumber(hex_string:sub(i, i + 1), 16)
+    byteString = byteString .. string.char(byte)
+  end
+  return byteString
 end
 
 -- Base64 encoding with url safe option
@@ -104,13 +102,28 @@ function NASCrypto.base64decode(data, url_safe)
 end
 
 
+-- Produce a hmac hash using a secret
+---@param digest_algorithm Enum_DigestType Digest algorithm to be used for hmac hashing
+---@param secret string Secret for hmac hashing
+---@param data string Data to hash
+---@return string digest Hashed bytes without encoding
+function NASCrypto.hmac_hash(digest_algorithm, secret, data)
+  local ctx = hmac.new(secret, digest_algorithm)
+  ctx:update(data)
+  local digest = ctx:final()
+
+  return digest
+end
+
+
+---@alias Crypto_EncryptedTable {iv: string, encrypted_data: string, tag: string? }
 -- Encrypts data using the specified cipher. If cipher uses GCM mode, a tag is generated.
 ---@param cipher_type Enum_CipherType `Enum_CipherType` to use for encryption.
 ---@param data string Data to be encrypted
 ---@param key string Encryption key of appropriate length
 ---@param iv string? Initialization vector of appropriate length. Generated if not provided
 ---@param tag_length number? Length of the authentication tag. Max and default is 16 bytes
----@return {iv: string, encrypted_data: string, tag: string? }? encrypted_table
+---@return Crypto_EncryptedTable? encrypted_table Table of byte strings for iv, data and tag
 function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   tag_length = tag_length or 16 -- Default to 16 bytes if not specified
 
@@ -311,7 +324,7 @@ function NASCrypto.get_random_hex(num_bytes, uppercase)
   num_bytes = num_bytes or 16
 
   local bytes = rand.bytes(num_bytes)
-  
+
   return NASCrypto.bin2hex(bytes, uppercase)
 end
 
@@ -321,7 +334,7 @@ end
 ---@return string SGUID sequential GUID
 function NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
   if uppercase == nil then uppercase = true end
-  
+
   local unixtime_milliseconds = NASCrypto.unixtime_milliseconds()
   local rand_hex = NASCrypto.get_random_hex(num_rand_bytes, uppercase)
 
@@ -365,6 +378,7 @@ function NASCrypto.hash_password(password, salt)
   end
 
   local hash
+  local replace = require("nas-utils.strings").replace
   local escaped_password = replace(password, '"', '\\"')
   local escaped_salt = replace(salt, '"', '\\"')
   local cmd = 'openssl passwd -6 -salt "'
