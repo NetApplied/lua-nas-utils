@@ -13,7 +13,8 @@ Output:
 
 
 ---------
-
+Returns same output as OpenSSL if option memcost is not used.
+Increasing iterations to 10000 or more if memcost is not used, will slow down hash.
 > kdf = require"openssl.kdf"
 > options = {}
 > options.type = "argon2id"

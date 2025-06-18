@@ -1,6 +1,5 @@
 -- nas-utils.crypto.lua
---TODO: HMAC function for HMAC-SHA256
-
+-- TODO: Change password hashing to ARGON2ID
 local NASCrypto      = {}
 
 NASCrypto._AUTHORS   = "Michael Stephan"
@@ -101,7 +100,6 @@ function NASCrypto.base64decode(data, url_safe)
   return decoded
 end
 
-
 -- Produce a hmac hash using a secret
 ---@param digest_algorithm Enum_DigestType Digest algorithm to be used for hmac hashing
 ---@param secret string Secret for hmac hashing
@@ -115,24 +113,26 @@ function NASCrypto.hmac_hash(digest_algorithm, secret, data)
   return digest
 end
 
-
----@alias Crypto_EncryptedTable {iv: string, encrypted_data: string, tag: string? }
+---@alias Crypto_EncryptedDataTable {iv: string, encrypted_data: string, tag: string? }
 -- Encrypts data using the specified cipher. If cipher uses GCM mode, a tag is generated.
+--
+-- Returns status code and data
 ---@param cipher_type Enum_CipherType `Enum_CipherType` to use for encryption.
 ---@param data string Data to be encrypted
 ---@param key string Encryption key of appropriate length
 ---@param iv string? Initialization vector of appropriate length. Generated if not provided
 ---@param tag_length number? Length of the authentication tag. Max and default is 16 bytes
----@return Crypto_EncryptedTable? encrypted_table Table of byte strings for iv, data and tag
+---@return boolean status Returns flase if error
+---@return Crypto_EncryptedDataTable|string encrypted_data_table Table of byte strings or error message
 function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   tag_length = tag_length or 16 -- Default to 16 bytes if not specified
 
   if cipher_type == nil or data == nil or key == nil then
-    error("Must provide cipher, data and key")
+    return false, "Must provide cipher, data and key"
   end
 
   if type(cipher_type) ~= "table" then
-    error("cipher_enum parameter must be Enum_CipherType table")
+    return false, "cipher_enum parameter must be Enum_CipherType table"
   end
 
   -- Ensure the key and IV are of appropriate length for the chosen cipher
@@ -142,7 +142,7 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   -- if iv not provided, generate a random one
   if iv == nil then
     if not rand.ready() then
-      error("Random number generator is not properly seeded")
+      return false, "Random number generator is not properly seeded"
     end
     iv = rand.bytes(iv_length)
   end
@@ -163,24 +163,22 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   -- Create a new cipher context
   local ctx = cipher.new(cipher_type.name)
   if not ctx then
-    error("Failed to create cipher context for " .. cipher_type.name)
+    return false, "Failed to create cipher context for " .. cipher_type.name
   end
 
   -- Initialize the cipher for encryption
   if not ctx:encrypt(key, iv) then
-    error("Failed to initialize cipher for encryption")
+    return false, "Failed to initialize cipher for encryption"
   end
 
   -- Encrypt the data
   local encrypted_data = ctx:update(data)
   encrypted_data = encrypted_data .. ctx:final()
 
-  if not encrypted_data then return nil end
-
   -- get authentication tag if supported by cipher
   local tag = cipher_type.has_tag and ctx:getTag(tag_length) or nil
 
-  return {
+  return true, {
     iv = iv,
     encrypted_data = encrypted_data,
     tag = tag
@@ -188,25 +186,28 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 end
 
 -- Decrypts data using the specified cipher. If cipher uses GCM, a tag must be provided.
+--
+-- Returns status code and data
 ---@param cipher_type Enum_CipherType `Enum_CipherType` to use for encryption.
 ---@param encrypted_data string Data to be decrypted
 ---@param key string Encryption key of appropriate length
 ---@param iv string Initialization vector of appropriate length.
 ---@param tag string? Optional authentication tag required if cipher uses GCM.
----@return string? Decrypted data or nil if decryption fails.
+---@return boolean status Returns false if error
+---@return string data data or error message if decryption fails.
 function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   local decrypted_data = nil
 
   if cipher_type == nil or encrypted_data == nil or key == nil or iv == nil then
-    error("Must provide cipher, encrypted_data, key and iv")
+    return false, "Must provide cipher, encrypted_data, key and iv"
   end
 
   if type(cipher_type) ~= "table" then
-    error("cipher_enum parameter must be Enum_CipherType table")
+    return false, "cipher_enum parameter must be Enum_CipherType table"
   end
 
   if cipher_type.has_tag and tag == nil then
-    error("Tag is required for GCM mode")
+    return false, "Tag is required for GCM mode"
   end
 
   -- Ensure the key and IV are of appropriate length for the chosen cipher
@@ -214,13 +215,13 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   local iv_length = cipher_type.iv_length
 
   if #iv < iv_length then
-    error("IV for " .. cipher_type.name .. " must be at least "
-      .. iv_length .. " bytes")
+    return false, "IV for " .. cipher_type.name .. " must be at least "
+        .. iv_length .. " bytes"
   end
 
   if #key < key_length then
-    error("Key for " .. cipher_type.name .. " must be at least "
-      .. key_length .. " bytes")
+    return false, "Key for " .. cipher_type.name .. " must be at least "
+        .. key_length .. " bytes"
   end
 
   key = string.sub(key, 1, key_length)
@@ -229,17 +230,17 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   -- Create a new cipher context
   local ctx = cipher.new(cipher_type.name)
   if not ctx then
-    error("Failed to create cipher context for " .. cipher_type.name)
+    return false, "Failed to create cipher context for " .. cipher_type.name
   end
 
   -- Initialize the cipher for decryption
   if not ctx:decrypt(key, iv) then
-    error("Failed to initialize cipher for decryption")
+    return false, "Failed to initialize cipher for decryption"
   end
 
   if cipher_type.has_tag then
     if not ctx:setTag(tag) then
-      error("Failed to set authentication tag")
+      return false, "Failed to set authentication tag"
     end
   end
 
@@ -247,7 +248,7 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   decrypted_data = ctx:update(encrypted_data)
   decrypted_data = decrypted_data .. ctx:final()
 
-  return decrypted_data
+  return true, decrypted_data
 end
 
 --[[
