@@ -8,6 +8,7 @@ A Lua module providing cryptographic utilities for encoding, encryption, random 
 - [hex2bin](#hex2bin)
 - [base64encode](#base64encode)
 - [base64decode](#base64decode)
+- [hmac_hash](#hmac_hash)
 - [encrypt](#encrypt)
 - [decrypt](#decrypt)
 - [get_random_hex_cmd](#get_random_hex_cmd)
@@ -72,6 +73,21 @@ NASCrypto.base64decode(data, url_safe)
 - `data` (`string`): Data to decode.
 - `url_safe` (`boolean?`): If true, decodes URL-safe base64 (default: false).
 - **Returns:** `string?` Decoded string or nil if data is nil.
+
+---
+
+## hmac_hash
+
+**Produce an HMAC hash using a secret and digest algorithm.**
+
+```lua
+NASCrypto.hmac_hash(digest_algorithm, secret, data)
+```
+
+- `digest_algorithm` (`string`): Digest algorithm name (see `DigestType` enum, e.g. `"sha256"`).
+- `secret` (`string`): Secret key for HMAC hashing.
+- `data` (`string`): Data to hash.
+- **Returns:** `string` Raw hashed bytes (not encoded).
 
 ---
 
@@ -200,6 +216,7 @@ local hex = crypto.bin2hex("abc") -- "616263"
 local bytes = crypto.hex2bin("616263") -- "abc"
 local b64 = crypto.base64encode("hello") -- "aGVsbG8="
 local raw = crypto.base64decode("aGVsbG8=") -- "hello"
+local hmac = crypto.hmac_hash("sha256", "secret", "data")
 local randhex = crypto.get_random_hex(8) -- e.g. "A1B2C3D4E5F6A7B8"
 local guid = crypto.get_sequential_guid() -- e.g. "1718040000000-ABCDEF1234567890"
 local now = crypto.unixtime_milliseconds() -- e.g. 1718040000000
