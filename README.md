@@ -52,15 +52,10 @@ logger:info("Started app")
 - [helpers](./docs/helpers.md)
 - [logger_rolling_file](./docs/logger_rolling_file.md)
 
-<br><br>  
 
 ## License
 
 MIT License.  
 Copyright (c) 2025 NetApplied Solutions
-
----
-
-**Author:** Michael Stephan, NetApplied Solutions
-
+    
 See [LICENSE](./LICENSE) for details.
