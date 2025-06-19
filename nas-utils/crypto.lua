@@ -11,8 +11,9 @@ local socket         = require("socket")         -- luasocket
 local rand           = require("openssl.rand")   -- luaossl
 local cipher         = require("openssl.cipher") -- luaossl
 local hmac           = require("openssl.hmac")   -- luaossl
-local b64encode      = require("mime").b64
-local b64decode      = require("mime").unb64
+local kdf            = require("openssl.kdf")    -- luaossl
+local b64encode      = require("mime").b64       -- luasocket
+local b64decode      = require("mime").unb64     -- luasocket
 
 
 --[[
@@ -98,6 +99,44 @@ function NASCrypto.base64decode(data, url_safe)
   local decoded = b64decode(data)
 
   return decoded
+end
+
+---@alias Crypto_KdfOptions {type: string, outlen: number, pass: string, salt: string,
+---iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?}
+
+-- Key derivation function. Will throw an error if type is unsupported or options are wrong
+--
+-- Complete kdf_options: {type: string, outlen: number, pass: string, salt: string,
+-- iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?,
+-- seed: string?, hkdf_mode: string?, info: string?, N: number?, r: number?, p: number?}
+--
+-- If you are using the output for password hashing, then the output length:
+-- - Must be no more than the native hash's output size:
+--    - SHA-1 is 20 bytes,
+--    - SHA-224 is 28 bytes,
+--    - SHA-256 is 32 bytes,
+--    - SHA-384 is 48 bytes,
+--    - SHA-512 is 64 bytes
+-- - Must be no less than your risk tolerance. In practice, anything less than 20 bytes 
+-- (SHA-1 native output size) is too small.
+--
+-- If you are using the output directly as only a single encryption key:
+--
+-- - Should be equal to the size of the encryption key you need. 
+-- Ideally is also no more than the native hash's output size (see above)
+---@param kdf_options Crypto_KdfOptions Table of options for kdf derivation
+---@param output_hex boolean? Default is false (byte string output)
+---@return string derived_key Byte string or hex representation of bytes
+function NASCrypto.kdf_derive(kdf_options, output_hex)
+  output_hex = output_hex and true or false
+
+  -- TODO: Complete kdf_derive function
+  local derived_key = kdf.derive(kdf_options)
+
+  -- check if hex output requested
+  derived_key = output_hex and NASCrypto.bin2hex(derived_key) or derived_key
+
+  return derived_key
 end
 
 -- Produce a hmac hash using a secret
@@ -252,39 +291,6 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
 end
 
 --[[
-Description - get_random_hex_cmd:
-- Generate a random hex string of the specified number of bytes.
-If no length is specified, it will generate a hex string for 32 bytes (64 hex chars).
-
-Parameters:
-  - num_bytes: number?  - the number of bytes to generate a hex string from.
-    If this is not specified, it will return a hex string of 64 characters.
-
-Returns:
-  - A string of hex characters.
-
-Throws:
-  - If num_bytes is not empty or a number, it will throw an error.
-
-Example:
-   - get_random_hex() - returns a hex string of 64 hex characters
-   - get_random_hex(16) - returns a hex string of 32 hex characters
-]]
----@param numberOfBytes number?
----@return string
-function NASCrypto.get_random_hex_cmd(numberOfBytes)
-  if numberOfBytes ~= nil and type(numberOfBytes) ~= "number" then
-    error("numberOfBytes must be empty or must be a number")
-  end
-
-  numberOfBytes = numberOfBytes or 32
-
-  local cmd = "openssl rand -hex " .. numberOfBytes
-
-  return NASCrypto._exec_popen(cmd)
-end
-
---[[
 Description - get_random_hex:
 - Generate a random hex string of the specified number of bytes.
 If no length is specified, it will generate a hex string for 16 bytes (32 hex chars).
@@ -345,7 +351,7 @@ end
 --[[
 Description - hash_password:
 - Hash a password with a salt.
-  Uses SHA512-based password algorithm
+- PBKDF2 key derivation method, using SHA512 hashing method by default
 
 Parameters:
   - password: string - the password to hash.
@@ -362,10 +368,46 @@ Throws:
 Example:
     - hash_password("password", "salt") - returns a hashed password.
 ]]
+-- Pasword hashing using PBKDF2 with sha512 digest algorithm
+---@param password string Password to hash. Must be 8 or more characters.
+---@param salt string Salt to use for hashing
+---@param iterations number Number of iterations to use for hashing
+---@return string hash Hashed password
+function NASCrypto.hash_password(password, salt, iterations)
+  local hash
+  if password == nil or type(password) ~= "string" or #password < 8 then
+    error("password must not be empty and must be 8 or more characters")
+  end
+
+  if salt == nil or type(salt) ~= "string" then
+    error("salt must not be empty and must be a string")
+  end
+
+  if iterations == nil or type(iterations) ~= "number" then
+    error("iterations must not be empty and must be a number")
+  end
+
+  local kdf_options = {
+    type = "pbkdf2"
+  }
+  -- TODO: Complete function
+  hash = NASCrypto.kdf_derive({
+    type = kdf_options.type,
+    outlen = 64, -- SHA512 produces 64 bytes
+    pass = password,
+    salt = salt,
+    iter = iterations or 100000, -- Default to 100000 iterations
+    md = "sha512"
+  }, true) -- true for hex output
+
+  return hash
+end
+
+-- Deprecated command version
 ---@param password string
 ---@param salt string
 ---@return string
-function NASCrypto.hash_password(password, salt)
+function NASCrypto.hash_password_cmd(password, salt)
   -- Switch to ARGON2I
   -- https://asecuritysite.com/openssl/argon
   -- openssl kdf -keylen 24 -kdfopt pass:Hello -kdfopt salt:NaCl1234
@@ -416,11 +458,12 @@ Example:
   - hash_password_verify("password", "$5$1234567890abcde", "salt")
 
 ]]
+-- Deprecated command version
 ---@param password string
 ---@param hashed_password string
 ---@param salt string
 ---@return boolean
-function NASCrypto.hash_password_verify(password, hashed_password, salt)
+function NASCrypto.hash_password_verify_cmd(password, hashed_password, salt)
   if hashed_password == nil or type(hashed_password) ~= "string" then
     error("hashed_password must not be empty and must be a string")
   end
