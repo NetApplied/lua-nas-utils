@@ -11,7 +11,7 @@ openssl kdf -keylen 32 -kdfopt pass:Hello -kdfopt salt:NaCl1234 -kdfopt iter:10 
 Output:
 72:98:D7:97:5A:94:63:06:D2:F4:CC:DB:FC:3D:BF:46:4D:7A:1F:B4:38:46:5A:B5:D8:8A:9B:B5:A4:7A:99:61
 
-
+-- Note: Not available on OpenSSL 3.0 (Ubuntu 24.04)
 ---------
 Returns same output as OpenSSL if option memcost is not used.
 Increasing iterations to 10000 or more if memcost is not used, will slow down hash.
@@ -28,6 +28,20 @@ Increasing iterations to 10000 or more if memcost is not used, will slow down ha
 
 
 ---------
+
+PBKDF2 Example (needs high iterations)
+
+> kdf = require"openssl.kdf"
+> options = {}
+> options.type = "pbkdf2"
+> options.outlen = 32
+> options.pass = "Hello"
+> options.salt = "NaCl1234"
+> options.iter = 200000
+> options.md = "sha512"
+> h = kdf.derive(options)
+> print(bin2hex(h))
+067212b1805f5fa94ae04eb4b6246fc5688054b1a19b91aa9d509b4aaf5b2cfd
 
 
 https://stackoverflow.com/questions/58431973/argon2-library-that-hashes-passwords-without-a-secret-and-with-a-random-salt-tha

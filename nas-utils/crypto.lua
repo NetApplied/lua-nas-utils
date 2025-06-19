@@ -57,7 +57,7 @@ end
 -- Base64 encoding with url safe option
 ---@param data string Data to encode
 ---@param url_safe boolean? Option to make the encoding URL-safe (default is false)
----@return string? The base64 encoded string or nil if data is nil
+---@return string? encoded The base64 encoded string or nil if data is nil
 function NASCrypto.base64encode(data, url_safe)
   url_safe = url_safe or false
   if not data then return nil end
@@ -78,7 +78,7 @@ end
 -- Base64 decoding with url safe option
 ---@param data string Data to decode
 ---@param url_safe boolean? Option for when data is URL-safe encoded (default is false)
----@return string? The base64 decoded string or nil if data is nil
+---@return string? decoded The base64 decoded string or nil if data is nil
 function NASCrypto.base64decode(data, url_safe)
   url_safe = url_safe or false
   if not data then return nil end

@@ -32,6 +32,8 @@ function NASJwt.encode(payload, secret)
     local encoded_header = b64encode(json.encode(header), true)
     local encoded_payload = b64encode(json.encode(payload), true)
 
+    if encoded_header == nil or encoded_payload == nil then return nil end
+
     local signing_input = encoded_header .. '.' .. encoded_payload
     local signature = hmac_sha256(secret, signing_input)
 
