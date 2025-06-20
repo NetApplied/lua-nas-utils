@@ -104,7 +104,9 @@ end
 ---@alias Crypto_KdfOptions {type: string, outlen: number, pass: string, salt: string,
 ---iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?}
 
--- Key derivation function. Will throw an error if type is unsupported or options are wrong
+-- Key derivation function. 
+--
+-- Will throw an error if type is unsupported or kdf_options are wrong
 --
 -- Complete kdf_options: {type: string, outlen: number, pass: string, salt: string,
 -- iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?,
@@ -117,12 +119,12 @@ end
 --    - SHA-256 is 32 bytes,
 --    - SHA-384 is 48 bytes,
 --    - SHA-512 is 64 bytes
--- - Must be no less than your risk tolerance. In practice, anything less than 20 bytes 
+-- - Must be no less than your risk tolerance. In practice, anything less than 20 bytes
 -- (SHA-1 native output size) is too small.
 --
 -- If you are using the output directly as only a single encryption key:
 --
--- - Should be equal to the size of the encryption key you need. 
+-- - Should be equal to the size of the encryption key you need.
 -- Ideally is also no more than the native hash's output size (see above)
 ---@param kdf_options Crypto_KdfOptions Table of options for kdf derivation
 ---@param output_hex boolean? Default is false (byte string output)
@@ -130,7 +132,6 @@ end
 function NASCrypto.kdf_derive(kdf_options, output_hex)
   output_hex = output_hex and true or false
 
-  -- TODO: Complete kdf_derive function
   local derived_key = kdf.derive(kdf_options)
 
   -- check if hex output requested
@@ -161,7 +162,7 @@ end
 ---@param key string Encryption key of appropriate length
 ---@param iv string? Initialization vector of appropriate length. Generated if not provided
 ---@param tag_length number? Length of the authentication tag. Max and default is 16 bytes
----@return boolean status Returns flase if error
+---@return boolean status Returns false if error
 ---@return Crypto_EncryptedDataTable|string encrypted_data_table Table of byte strings or error message
 function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   tag_length = tag_length or 16 -- Default to 16 bytes if not specified
@@ -290,6 +291,26 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   return true, decrypted_data
 end
 
+-- Generates cryptographically secure random bytes
+--
+-- Throws an error if num_bytes is not a number or luaossl rand.ready is false
+---@param num_bytes number? Integer number of bytes to generate, default is 16
+---@return string byte_string Randomized byte string
+function NASCrypto.get_random_bytes(num_bytes)
+  if num_bytes ~= nil and type(num_bytes) ~= "number" then
+    error("num_bytes must be empty or must be a number")
+  end
+
+  -- make sure number is integer
+  num_bytes = num_bytes and math.floor(num_bytes) or 16
+
+  if not rand.ready() then
+    error("random number generator is not properly seeded")
+  end
+
+  return rand.bytes(num_bytes)
+end
+
 --[[
 Description - get_random_hex:
 - Generate a random hex string of the specified number of bytes.
@@ -320,17 +341,9 @@ Example:
 function NASCrypto.get_random_hex(num_bytes, uppercase)
   if uppercase == nil then uppercase = true end
 
-  if not rand.ready() then
-    error("Random number generator is not properly seeded")
-  end
-
-  if num_bytes ~= nil and type(num_bytes) ~= "number" then
-    error("numberOfBytes must be empty or must be a number")
-  end
-
   num_bytes = num_bytes or 16
 
-  local bytes = rand.bytes(num_bytes)
+  local bytes = NASCrypto.get_random_bytes(num_bytes)
 
   return NASCrypto.bin2hex(bytes, uppercase)
 end
@@ -348,18 +361,23 @@ function NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
   return unixtime_milliseconds .. "-" .. rand_hex
 end
 
+
 --[[
 Description - hash_password:
 - Hash a password with a salt.
-- PBKDF2 key derivation method, using SHA512 hashing method by default
+- PBKDF2 key derivation method, using HMAC-SHA512 pseudorandom function by default
 
 Parameters:
   - password: string - the password to hash.
     Password must not be empty and be 8 or more characters.
-  - salt: string - the salt to use.
+  - salt: string - Optional salt to use.  If not provided, a random salt will be generated.
+  - iterations: number - Optional number of iterations to use for hashing.
+    Default is 250,000 iterations, but can be set to a higher value for more security.
+  - algorithm: string - Optional password hashing algorithm to use.
+    Default and only supported algorithm is "pbkdf2_sha512".
 
 Returns:
-  - hash: stringA hashed password.
+  - hash_format: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
 
 Throws:
   - If the password is empty or not a string, it will throw an error.
@@ -368,109 +386,98 @@ Throws:
 Example:
     - hash_password("password", "salt") - returns a hashed password.
 ]]
--- Pasword hashing using PBKDF2 with sha512 digest algorithm
+-- Pasword hashing using PBKDF2_HMAC-SHA512 pseudorandom function by default
 ---@param password string Password to hash. Must be 8 or more characters.
----@param salt string Salt to use for hashing
----@param iterations number Number of iterations to use for hashing
----@return string hash Hashed password
-function NASCrypto.hash_password(password, salt, iterations)
-  local hash
+---@param salt string? Salt to use for hashing, or nil to generate a random salt.
+---@param iterations number? Optional number of iterations, default is 250,000 iterations.
+---@param algorithm string? Optional hashing algorithm, default pbkdf2_sha512
+---@return string hash_format format of "algorithm$iterations$b64_salt$b64_pw_hash"
+function NASCrypto.hash_password(password, salt, iterations, algorithm)
   if password == nil or type(password) ~= "string" or #password < 8 then
     error("password must not be empty and must be 8 or more characters")
   end
 
-  if salt == nil or type(salt) ~= "string" then
-    error("salt must not be empty and must be a string")
+  if salt ~= nil and type(salt) ~= "string" then
+    error("salt must be empty or must be a string")
   end
 
-  if iterations == nil or type(iterations) ~= "number" then
-    error("iterations must not be empty and must be a number")
+  if iterations ~= nil and type(iterations) ~= "number" then
+    error("iterations must be empty or must be a number")
   end
 
-  local kdf_options = {
-    type = "pbkdf2"
-  }
-  -- TODO: Complete function
-  hash = NASCrypto.kdf_derive({
-    type = kdf_options.type,
-    outlen = 64, -- SHA512 produces 64 bytes
-    pass = password,
-    salt = salt,
-    iter = iterations or 100000, -- Default to 100000 iterations
-    md = "sha512"
-  }, true) -- true for hex output
+  local kdf_options = {}
+  iterations = iterations or 250000 -- Default to 250,000 iterations
+  salt = salt or NASCrypto.get_random_bytes(24)
+  algorithm = algorithm or "pbkdf2_sha512"
 
-  return hash
+  -- check for supported algorithms
+  if algorithm == "pbkdf2_sha512" then
+    kdf_options.type = "pbkdf2"
+    kdf_options.md = "sha512"
+    kdf_options.outlen = 64 -- SHA512 native output size is 64 bytes
+  else
+    error("Unsupported algorithm: " .. algorithm)
+  end
+
+  kdf_options.pass = password
+  kdf_options.salt = salt
+  kdf_options.iter = iterations
+
+  local pass_hash_bytes = NASCrypto.kdf_derive(kdf_options)
+
+  local str_format = "%s$%d$%s$%s"
+  local b64salt = NASCrypto.base64encode(salt, true)
+  local b64hash = NASCrypto.base64encode(pass_hash_bytes, true)
+
+  return string.format(str_format, algorithm, iterations, b64salt, b64hash)
 end
 
--- Deprecated command version
----@param password string
----@param salt string
----@return string
-function NASCrypto.hash_password_cmd(password, salt)
-  -- Switch to ARGON2I
-  -- https://asecuritysite.com/openssl/argon
-  -- openssl kdf -keylen 24 -kdfopt pass:Hello -kdfopt salt:NaCl1234
-  --    -kdfopt iter:1 -kdfopt memcost:8192 ARGON2I
-  if password == nil or type(password) ~= "string" or #password < 8 then
-    error("password must not be empty and must be 8 or more characters")
-  end
-
-  if salt == nil or type(salt) ~= "string" then
-    error("salt must not be empty and must be a string")
-  end
-
-  local hash
-  local replace = require("nas-utils.strings").replace
-  local escaped_password = replace(password, '"', '\\"')
-  local escaped_salt = replace(salt, '"', '\\"')
-  local cmd = 'openssl passwd -6 -salt "'
-      .. escaped_salt .. '" "'
-      .. escaped_password .. '"'
-
-  -- print("cmd", cmd)
-  hash = NASCrypto._exec_popen(cmd)
-
-  return hash
-end
 
 --[[
 Description - hash_password_verify:
-  - Verify a hashed password with the given salt.
-    Uses SHA512-based password algorithm
+  - Verify a password against the provided hash_format string
+    "algorithm$iterations$b64_salt$b64_pw_hash".
+
   - Return true if the hashed password is correct, and false otherwise.
 
 Parameters:
   - password: string - the password to verify.
     Password must not be empty and be 8 or more characters.
-  - hashed_password: string - the hashed password to compare with.
-  - salt: string - the salt to use.
+  - hash_format: string - "algorithm$iterations$b64_salt$b64_pw_hash" to compare with.
 
 Returns:
-  - true if the hashed password is correct, and false otherwise.
+  - true if the hashed password matches given password, and false otherwise.
 
-Throws:
-  - If the password is empty or less than 8 characters, it will throw an error.
-  - If the hashed_password is empty or not a string, it will throw an error.
-  - If the salt is empty or not a string, it will throw an error.
+Throws an error:
+  - If the password is empty or less than 8 characters
+  - If the hashed_format string is empty or not correct format
 
 Example:
-  - hash_password_verify("password", "$5$1234567890abcde", "salt")
+  - hash_password_verify("password", "pbkdf2_sha512$250000$b64_salt$b64_pw_hash")
 
 ]]
--- Deprecated command version
----@param password string
----@param hashed_password string
----@param salt string
----@return boolean
-function NASCrypto.hash_password_verify_cmd(password, hashed_password, salt)
-  if hashed_password == nil or type(hashed_password) ~= "string" then
-    error("hashed_password must not be empty and must be a string")
+-- Verifies a password against the hash format string
+-- "algorithm$iterations$b64_salt$b64_pw_hash"
+---@param password string Password must not be empty and be 8 or more characters
+---@param hash_format string Format: "algorithm$iterations$b64_salt$b64_pw_hash"
+---@return boolean verified Returns true if password matches hash, false otherwise
+function NASCrypto.hash_password_verify(password, hash_format)
+  if hash_format == nil or type(hash_format) ~= "string" then
+    error("hash_format must not be empty and must be a string")
   end
 
-  local hash = NASCrypto.hash_password(password, salt)
+  local parts = { hash_format:match('([^$]+)$(%d+)$([^$]+)$([^$]+)') }
+  if #parts ~= 4 then
+    error("Invalid hash format, expected 'algorithm$iterations$b64_salt$b64_pw_hash'")
+  end
 
-  return hash == hashed_password
+  local algorithm, iterations, b64_salt, _ = unpack(parts)
+  iterations = tonumber(iterations) or 1 -- default to
+
+  local salt = NASCrypto.base64decode(b64_salt, true)
+
+  return hash_format == NASCrypto.hash_password(password, salt, iterations, algorithm)
+
 end
 
 --[[

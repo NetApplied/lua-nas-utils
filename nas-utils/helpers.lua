@@ -576,3 +576,38 @@ end
 
 
 return NASHelpers
+
+
+--[[
+***************************
+*** Example _exec_popen ***
+***************************
+
+
+local function hash_password_cmd(password, salt)
+  -- Switch to ARGON2I
+  -- https://asecuritysite.com/openssl/argon
+  -- openssl kdf -keylen 24 -kdfopt pass:Hello -kdfopt salt:NaCl1234
+  --    -kdfopt iter:1 -kdfopt memcost:8192 ARGON2I
+  if password == nil or type(password) ~= "string" or #password < 8 then
+    error("password must not be empty and must be 8 or more characters")
+  end
+
+  if salt == nil or type(salt) ~= "string" then
+    error("salt must not be empty and must be a string")
+  end
+
+  local hash
+  local replace = require("nas-utils.strings").replace
+  local escaped_password = replace(password, '"', '\\"')
+  local escaped_salt = replace(salt, '"', '\\"')
+  local cmd = 'openssl passwd -6 -salt "'
+      .. escaped_salt .. '" "'
+      .. escaped_password .. '"'
+
+  -- print("cmd", cmd)
+  hash = NASHelpers._exec_popen(cmd)
+
+  return hash
+end
+]]
