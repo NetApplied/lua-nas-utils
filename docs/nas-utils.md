@@ -9,6 +9,7 @@ A collection of Lua utilities for NAS systems, providing helpers for cryptograph
   - [crypto](#crypto)
   - [strings](#strings)
   - [logger_rolling_file](#logger_rolling_file)
+  - [jwt](#jwt)
 - [Enumerations](#enumerations)
   - [LogLevel](#loglevel)
   - [CipherType](#ciphertype)
@@ -43,6 +44,12 @@ See: [strings.md](./strings.md)
 Rolling file logger using the `logging.rolling_file` backend.
 
 See: [logger_rolling_file.md](./logger_rolling_file.md)
+
+### jwt
+
+JSON Web Token encode/decode utilities for signing and verifying JWTs.
+
+See: [jwt.md](./jwt.md)
 
 ---
 
@@ -142,6 +149,10 @@ print(nas.strings.capitalize("hello world")) -- "Hello world"
 -- Use logger
 local logger = nas.logger_rolling_file.get_log({filename = "myapp.log"})
 logger:info("Started app")
+
+-- Use JWT
+local token = nas.jwt.encode({user_id = 123}, "mysecret")
+local ok, payload = nas.jwt.decode(token, "mysecret")
 
 -- Use enumerations
 local aes256gcm = nas.CipherType.AES_256_GCM

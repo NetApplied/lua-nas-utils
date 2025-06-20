@@ -9,9 +9,10 @@ A Lua module providing cryptographic utilities for encoding, encryption, random 
 - [base64encode](#base64encode)
 - [base64decode](#base64decode)
 - [hmac_hash](#hmac_hash)
+- [kdf_derive](#kdf_derive)
 - [encrypt](#encrypt)
 - [decrypt](#decrypt)
-- [get_random_hex_cmd](#get_random_hex_cmd)
+- [get_random_bytes](#get_random_bytes)
 - [get_random_hex](#get_random_hex)
 - [get_sequential_guid](#get_sequential_guid)
 - [hash_password](#hash_password)
@@ -58,7 +59,7 @@ NASCrypto.base64encode(data, url_safe)
 
 - `data` (`string`): Data to encode.
 - `url_safe` (`boolean?`): If true, makes encoding URL-safe (default: false).
-- **Returns:** `string?` Base64 encoded string or nil if data is nil.
+- **Returns:** `string` Base64 encoded string.
 
 ---
 
@@ -72,7 +73,7 @@ NASCrypto.base64decode(data, url_safe)
 
 - `data` (`string`): Data to decode.
 - `url_safe` (`boolean?`): If true, decodes URL-safe base64 (default: false).
-- **Returns:** `string?` Decoded string or nil if data is nil.
+- **Returns:** `string` Decoded string.
 
 ---
 
@@ -91,12 +92,26 @@ NASCrypto.hmac_hash(digest_algorithm, secret, data)
 
 ---
 
+## kdf_derive
+
+**Key derivation using PBKDF2, HKDF, etc.**
+
+```lua
+NASCrypto.kdf_derive(kdf_options, output_hex)
+```
+
+- `kdf_options` (`table`): Options for key derivation (see luaossl docs; e.g. type, md, outlen, pass, salt, iter).
+- `output_hex` (`boolean?`): Output as hex string (default: false).
+- **Returns:** `string` Derived key (bytes or hex).
+
+---
+
 ## encrypt
 
 **Encrypt data using a specified cipher.**
 
 ```lua
-NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
+local status, result = NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 ```
 
 - `cipher_type` (`Enum_CipherType`): Cipher type table.
@@ -104,7 +119,9 @@ NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 - `key` (`string`): Encryption key.
 - `iv` (`string?`): Initialization vector (optional).
 - `tag_length` (`number?`): Tag length for GCM (default: 16).
-- **Returns:** `{iv: string, encrypted_data: string, tag: string?}`
+- **Returns:**
+  - `status` (`boolean`): true if success, false if error
+  - `result` (`table|string`): `{iv, encrypted_data, tag}` table if success, or error message if failure
 
 ---
 
@@ -113,7 +130,7 @@ NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 **Decrypt data using a specified cipher.**
 
 ```lua
-NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
+local status, result = NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
 ```
 
 - `cipher_type` (`Enum_CipherType`): Cipher type table.
@@ -121,20 +138,22 @@ NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
 - `key` (`string`): Encryption key.
 - `iv` (`string`): Initialization vector.
 - `tag` (`string?`): Authentication tag for GCM (optional).
-- **Returns:** `string?` Decrypted data or nil if decryption fails.
+- **Returns:**
+  - `status` (`boolean`): true if success, false if error
+  - `result` (`string`): Decrypted data if success, or error message if failure
 
 ---
 
-## get_random_hex_cmd
+## get_random_bytes
 
-**Generate a random hex string using the `openssl` command.**
+**Generate cryptographically secure random bytes.**
 
 ```lua
-NASCrypto.get_random_hex_cmd(numberOfBytes)
+NASCrypto.get_random_bytes(num_bytes)
 ```
 
-- `numberOfBytes` (`number?`): Number of bytes (default: 32).
-- **Returns:** `string` Hex string.
+- `num_bytes` (`number?`): Number of bytes (default: 16).
+- **Returns:** `string` Random bytes.
 
 ---
 
@@ -168,29 +187,30 @@ NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
 
 ## hash_password
 
-**Hash a password with a salt using SHA512-based algorithm.**
+**Hash a password with a salt using PBKDF2-HMAC-SHA512.**
 
 ```lua
-NASCrypto.hash_password(password, salt)
+NASCrypto.hash_password(password, salt, iterations, algorithm)
 ```
 
 - `password` (`string`): Password (min 8 chars).
-- `salt` (`string`): Salt string.
-- **Returns:** `string` Hashed password.
+- `salt` (`string?`): Salt string (optional; random if not provided).
+- `iterations` (`number?`): Number of iterations (default: 250000).
+- `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512").
+- **Returns:** `string` Hash format: `algorithm$iterations$b64_salt$b64_pw_hash`.
 
 ---
 
 ## hash_password_verify
 
-**Verify a password against a hashed password and salt.**
+**Verify a password against a hash format string.**
 
 ```lua
-NASCrypto.hash_password_verify(password, hashed_password, salt)
+NASCrypto.hash_password_verify(password, hash_format)
 ```
 
-- `password` (`string`): Password to verify.
-- `hashed_password` (`string`): Hashed password.
-- `salt` (`string`): Salt string.
+- `password` (`string`): Password to verify (min 8 chars).
+- `hash_format` (`string`): Hash format string: `algorithm$iterations$b64_salt$b64_pw_hash`.
 - **Returns:** `boolean` True if password matches.
 
 ---
@@ -222,8 +242,8 @@ local guid = crypto.get_sequential_guid() -- e.g. "1718040000000-ABCDEF123456789
 local now = crypto.unixtime_milliseconds() -- e.g. 1718040000000
 
 -- Password hashing
-local hash = crypto.hash_password("mysecretpassword", "mysalt")
-local ok = crypto.hash_password_verify("mysecretpassword", hash, "mysalt")
+local hash = crypto.hash_password("mysecretpassword")
+local ok = crypto.hash_password_verify("mysecretpassword", hash)
 ```
 
 ---
