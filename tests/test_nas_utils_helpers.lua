@@ -4,8 +4,8 @@ local lu = require "luaunit"
 local nas_helper = require "nas-utils.helpers"
 
 Test_NASHelper = {}
-Test_NASHelper._Authors = "Michael Stephan"
-Test_NASHelper._Version = "250614"
+Test_NASHelper._AUTHORS = "Michael Stephan"
+Test_NASHelper._VERSION = "0.3.2-1"
 
 function Test_NASHelper.test_split_string()
   -- ARRANGE input string with delimiter of space

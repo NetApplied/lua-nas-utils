@@ -1,5 +1,5 @@
 -- nas-utils.crypto.lua
--- TODO: Change password hashing to ARGON2ID
+
 local NASCrypto      = {}
 
 NASCrypto._AUTHORS   = "Michael Stephan"
@@ -58,10 +58,10 @@ end
 -- Base64 encoding with url safe option
 ---@param data string Data to encode
 ---@param url_safe boolean? Option to make the encoding URL-safe (default is false)
----@return string? encoded The base64 encoded string or nil if data is nil
+---@return string encoded The base64 encoded string or nil if data is nil
 function NASCrypto.base64encode(data, url_safe)
   url_safe = url_safe or false
-  if not data then return nil end
+  if not data then error("data string must be provided") end
 
   -- Standard Base64 encoding
   local encoded = b64encode(data)
@@ -79,10 +79,10 @@ end
 -- Base64 decoding with url safe option
 ---@param data string Data to decode
 ---@param url_safe boolean? Option for when data is URL-safe encoded (default is false)
----@return string? decoded The base64 decoded string or nil if data is nil
+---@return string decoded The base64 decoded string or nil if data is nil
 function NASCrypto.base64decode(data, url_safe)
   url_safe = url_safe or false
-  if not data then return nil end
+  if not data then error("data string must be provided") end
 
   if url_safe then
     -- Add padding back if necessary
@@ -462,6 +462,10 @@ Example:
 ---@param hash_format string Format: "algorithm$iterations$b64_salt$b64_pw_hash"
 ---@return boolean verified Returns true if password matches hash, false otherwise
 function NASCrypto.hash_password_verify(password, hash_format)
+  if password == nil or type(password) ~= "string" or #password < 8 then
+    error("password must not be empty and must be 8 or more characters")
+  end
+
   if hash_format == nil or type(hash_format) ~= "string" then
     error("hash_format must not be empty and must be a string")
   end
@@ -472,7 +476,7 @@ function NASCrypto.hash_password_verify(password, hash_format)
   end
 
   local algorithm, iterations, b64_salt, _ = unpack(parts)
-  iterations = tonumber(iterations) or 1 -- default to
+  iterations = tonumber(iterations) or 1 -- tonumber can return nil
 
   local salt = NASCrypto.base64decode(b64_salt, true)
 

@@ -5,8 +5,8 @@ local lu = require "luaunit"
 local nas_strings = require "nas-utils.strings"
 
 Test_NASStrings = {}
-Test_NASStrings._Authors = "Michael Stephan"
-Test_NASStrings._Version = "250614"
+Test_NASStrings._AUTHORS = "Michael Stephan"
+Test_NASStrings._VERSION = "0.3.2-1"
 
 function Test_NASStrings:test_split()
     local ret = nas_strings.split("hello lua language")

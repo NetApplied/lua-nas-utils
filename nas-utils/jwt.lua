@@ -108,8 +108,16 @@ function NASJwt.decode(token, secret, check_exp)
     end
 
     local signing_input = encoded_header .. '.' .. encoded_payload
-    local header = json.decode(b64decode(encoded_header, true) or "{}")
-    local payload = json.decode(b64decode(encoded_payload, true) or "{}")
+
+    local b64_decoded_header = b64decode(encoded_header, true)
+    local b64_decoded_payload = b64decode(encoded_payload, true)
+
+    local ok, header, payload
+    ok, header = pcall(json.decode, b64_decoded_header)
+    if not ok then return false, "Invalid header" end
+
+    ok, payload = pcall(json.decode, b64_decoded_payload)
+    if not ok then return false, "Invalid payload" end
 
     if header.typ ~= "JWT" then return false, "Invalid token type" end
 
