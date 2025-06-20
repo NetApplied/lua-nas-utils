@@ -247,7 +247,7 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   end
 
   if cipher_type.has_tag and tag == nil then
-    return false, "Tag is required for GCM mode"
+    return false, "Tag is required for " .. (cipher_type.name or "GCM") .. " mode"
   end
 
   -- Ensure the key and IV are of appropriate length for the chosen cipher

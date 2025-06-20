@@ -1,5 +1,4 @@
 -- nas-utils.jwt.lua
--- TODO: Switch alg to HS512, add iat, nbf, sub and iss claims
 
 local NASJwt      = {}
 
@@ -9,45 +8,94 @@ NASJwt._LICENSE   = "MIT License"
 NASJwt._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
 
 local json        = require 'cjson'
-local hmac_hash        = require ("nas-utils.crypto").hmac_hash
+local hmac_hash   = require("nas-utils.crypto").hmac_hash
 local b64encode   = require("nas-utils.crypto").base64encode
 local b64decode   = require("nas-utils.crypto").base64decode
 
 
-local function hmac_sha256(secret, data)
-    local algs = require("nas-utils").DigestType
-    local digest = hmac_hash(algs.SHA256, secret, data)
+-- Helper HMAC function to generate a signature using the specified algorithm and secret.
+---@param jwt_alg string
+---@param secret string
+---@param data string
+---@return string?
+local function hmac_jwt(jwt_alg, secret, data)
+    local digest_type
+
+    jwt_alg = string.upper(jwt_alg)
+
+    if jwt_alg == "HS256" then
+        digest_type = "sha256"
+    elseif jwt_alg == "HS512" then
+        digest_type = "sha512"
+    else
+        error("Unsupported jwt algorithm: " .. jwt_alg)
+    end
+
+
+    local digest = hmac_hash(digest_type, secret, data)
     return b64encode(digest, true)
 end
 
 
--- JWT encode
+-- JWT encode using the following supported algorithms:
+-- - HS256 - Default HMAC-SHA256 algorithm for JWT signing
+-- - HS512 - Optinal HMAC-SHA512 algorithm for JWT signing
+--
+-- Sets the following defaults for payload claims if not already contained in payload:
+-- - iat: current time
+-- - nbf: current time
+-- - exp: current time + 2 hours
+-- - sub: "anonymous"
+-- - iss: "https://default.issuer.example.com"
+-- - aud: "https://default.audience.example.com"
 ---@param payload table Payload data
 ---@param secret string Secret for hmac hashing
----@return string? jwt JWT token
-function NASJwt.encode(payload, secret)
-    if not secret or type(payload) ~= "table" then return nil end
+---@param jwt_alg string?  Optional HS256(default) or HS512
+---@return string jwt JWT token
+function NASJwt.encode(payload, secret, jwt_alg)
+    if jwt_alg == nil then jwt_alg = "HS256" end
 
-    local header = { typ = "JWT", alg = "HS256" }
+    -- guard
+    if payload == nil or type(payload) ~= "table" then
+        error("payload table must be provided")
+    end
+
+    if secret == nil or type(secret) ~= "string" then
+        error("secret string must be provided")
+    end
+
+    -- set defaults for claims
+    payload.iat = payload.iat or os.time()
+    payload.nbf = payload.nbf or os.time()
+    payload.exp = payload.exp or os.time() + 7200 -- 2 hours
+    payload.sub = payload.sub or "anonymous"
+    payload.iss = payload.iss or "https://default.issuer.example.com"
+    payload.aud = payload.aud or "https://default.audience.example.com"
+
+    local header = { typ = "JWT", alg = jwt_alg }
 
     local encoded_header = b64encode(json.encode(header), true)
     local encoded_payload = b64encode(json.encode(payload), true)
 
-    if encoded_header == nil or encoded_payload == nil then return nil end
+    if encoded_header == nil or encoded_payload == nil then
+        error("could not encode jwt header or payload")
+    end
 
     local signing_input = encoded_header .. '.' .. encoded_payload
-    local signature = hmac_sha256(secret, signing_input)
+    local signature = hmac_jwt(jwt_alg, secret, signing_input)
 
     return signing_input .. '.' .. signature
 end
 
-
 -- Decode JWT Token
 ---@param token string Valid JWT token
 ---@param secret string Secret for hmac hashing
+---@param check_exp boolean? Check expiration time, defaults to true
 ---@return boolean status True if ok, false if error
 ---@return string data Payload or error message
-function NASJwt.decode(token, secret)
+function NASJwt.decode(token, secret, check_exp)
+    if check_exp == nil then check_exp = true end
+
     local parts = { token:match('([^%.]+)%.([^%.]+)%.([^%.]+)') }
     if #parts ~= 3 then
         return false, "Invalid token format"
@@ -60,22 +108,24 @@ function NASJwt.decode(token, secret)
     end
 
     local signing_input = encoded_header .. '.' .. encoded_payload
-
-    local expected_signature = hmac_sha256(secret, signing_input)
-    if signature ~= expected_signature then
-        return false, "Invalid token signature"
-    end
-
     local header = json.decode(b64decode(encoded_header, true) or "{}")
     local payload = json.decode(b64decode(encoded_payload, true) or "{}")
 
-    if header.typ ~= "JWT" or header.alg ~= "HS256" then
-        return false, "Invalid token type or algorithm"
+    if header.typ ~= "JWT" then return false, "Invalid token type" end
+
+    local ok, expected_signature = pcall(hmac_jwt, header.alg, secret, signing_input)
+
+    if not ok then return false, "Invalid algorithm" end
+
+    if signature ~= expected_signature then return false, "Invalid token signature" end
+
+    -- Check expiration time if requested
+    if check_exp then
+        if payload.exp and os.time() > payload.exp then
+            return false, "Token has expired"
+        end
     end
 
-    if payload.exp and os.time() > payload.exp then
-        return false, "Token has expired"
-    end
 
     return true, payload
 end

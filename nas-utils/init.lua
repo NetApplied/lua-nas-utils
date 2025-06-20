@@ -13,18 +13,19 @@ modules.helpers             = require("nas-utils.helpers")
 modules.crypto              = require("nas-utils.crypto")
 modules.strings             = require("nas-utils.strings")
 modules.logger_rolling_file = require("nas-utils.logger_rolling_file")
+modules.jwt                 = require("nas-utils.jwt")
 
 
 -----------------------
 -- Logging Enumerations
 -----------------------
 ---@enum Enum_LogLevel
-modules.LogLevel  = {
-    DEBUG = "DEBUG",
-    INFO = "INFO",
-    WARN = "WARN",
-    ERROR = "ERROR",
-    FATAL = "FATAL"
+modules.LogLevel = {
+  DEBUG = "DEBUG",
+  INFO = "INFO",
+  WARN = "WARN",
+  ERROR = "ERROR",
+  FATAL = "FATAL"
 }
 
 
@@ -33,7 +34,7 @@ modules.LogLevel  = {
 ----------------------
 
 -- `Enum_CipherType` enum is available from `require("nas-utils").CipherType`
----@alias Enum_CipherType {name: string, key_length: number, iv_length: number, 
+---@alias Enum_CipherType {name: string, key_length: number, iv_length: number,
 ---has_tag: boolean}
 ---
 -- @enum tag does not work with complex table, use @alias instead
