@@ -198,7 +198,7 @@ NASCrypto.hash_password(password, salt, iterations, algorithm)
 ```
 
 - `password` (`string`): Password (min 8 chars).
-- `salt` (`string?`): Salt string (optional; random if not provided).
+- `salt` (`string?`): Salt string (optional; secure random salt generated if not provided).
 - `iterations` (`number?`): Number of iterations (default: 250000 for pbkdf2_sha512, 300000 for pbkdf2_sha256, 10000 for argon2i/argon2id).
 - `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512"). **Supported values:** `"pbkdf2_sha512"`, `"pbkdf2_sha256"`, `"argon2i"`, `"argon2id"`.
 - **Returns:** `string` Hash format: `algorithm$iterations$b64_salt$b64_pw_hash`.

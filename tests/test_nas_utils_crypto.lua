@@ -153,7 +153,7 @@ function Test_NASCrypto.test_encrypt_errors()
   local data = "data"
   -- These should error due to short key/iv, so use assertError
   lu.assertError(nas_crypto.encrypt, cipher_type, data, key, iv)
----@diagnostic disable-next-line: param-type-mismatch
+  ---@diagnostic disable-next-line: param-type-mismatch
   lu.assertFalse(select(1, nas_crypto.encrypt("notatable", data, key, iv)))
 end
 
@@ -163,7 +163,7 @@ function Test_NASCrypto.test_decrypt_errors()
   local iv = "short"
   local enc = "enc"
   lu.assertFalse(select(1, nas_crypto.decrypt(cipher_type, enc, key, iv)))
----@diagnostic disable-next-line: param-type-mismatch
+  ---@diagnostic disable-next-line: param-type-mismatch
   lu.assertFalse(select(1, nas_crypto.decrypt("notatable", enc, key, iv)))
   local gcm_type = { name = "aes-128-gcm", key_length = 16, iv_length = 12, has_tag = true }
   lu.assertFalse(select(1, nas_crypto.decrypt(gcm_type, enc, key, iv)))
@@ -188,7 +188,8 @@ function Test_NASCrypto.test_hash_password()
   lu.assertStrContains(hash, "pbkdf2_sha256$")
   lu.assertError(nas_crypto.hash_password, "short", salt)
   lu.assertError(nas_crypto.hash_password, pw, 12345)
-  -- Test Argon2id support
+
+  -- Test Argon2id support - only supported on OpenSSL 3.2 or greater
   hash = nas_crypto.hash_password(pw, nil, nil, "argon2id")
   lu.assertStrContains(hash, "argon2id$")
   lu.assertTrue(nas_crypto.hash_password_verify(pw, hash))
@@ -230,7 +231,7 @@ function Test_NASCrypto.test_unixtime_milliseconds()
   local t2 = os.time() * 1000
   lu.assertTrue(math.abs(t1 - t2) < 10000) -- within 10 seconds
   -- Should increase over time
-  local socket = require("socket") -- luasocket
+  local socket = require("socket")         -- luasocket
   socket.sleep(0.01)
   local t3 = nas_crypto.unixtime_milliseconds()
   lu.assertTrue(t3 > t1)
