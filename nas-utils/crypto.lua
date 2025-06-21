@@ -445,14 +445,14 @@ function NASCrypto.hash_password(password, salt, iterations, algorithm)
     kdf_options.outlen = 32 -- SHA256 native output size is 32 bytes
     kdf_options.iter = iterations
   elseif algorithm == "argon2i" then
-    -- Default to 10 iterations
-    iterations = iterations or 10
+    -- Default to 10,000 iterations, no memcost option yet for luaossl
+    iterations = iterations or 10000
     kdf_options.type = "argon2i"
     kdf_options.outlen = 32
     kdf_options.iter = iterations
   elseif algorithm == "argon2id" then
-    -- Default to 10 iterations
-    iterations = iterations or 10
+    -- Default to 10,000 iterations, no memcost option yet for luaossl
+    iterations = iterations or 10000
     kdf_options.type = "argon2id"
     kdf_options.outlen = 32
     kdf_options.iter = iterations
