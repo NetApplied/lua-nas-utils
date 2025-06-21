@@ -188,7 +188,9 @@ NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
 
 ## hash_password
 
-**Hash a password with a salt using PBKDF2-HMAC-SHA512.**
+**Hash a password with a salt using PBKDF2-HMAC-SHA512, PBKDF2-HMAC-SHA256, Argon2i, or Argon2id.**
+
+Note: Argon2i and Argon2id are only supported on systems with OpenSSL 3.2 or higher.
 
 ```lua
 NASCrypto.hash_password(password, salt, iterations, algorithm)
@@ -196,8 +198,8 @@ NASCrypto.hash_password(password, salt, iterations, algorithm)
 
 - `password` (`string`): Password (min 8 chars).
 - `salt` (`string?`): Salt string (optional; random if not provided).
-- `iterations` (`number?`): Number of iterations (default: 250000).
-- `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512").
+- `iterations` (`number?`): Number of iterations (default: 250000 for pbkdf2_sha512, 300000 for pbkdf2_sha256, 10 for argon2i/argon2id).
+- `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512"). **Supported values:** `"pbkdf2_sha512"`, `"pbkdf2_sha256"`, `"argon2i"`, `"argon2id"`.
 - **Returns:** `string` Hash format: `algorithm$iterations$b64_salt$b64_pw_hash`.
 
 ---

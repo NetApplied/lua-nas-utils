@@ -104,7 +104,7 @@ end
 ---@alias Crypto_KdfOptions {type: string, outlen: number, pass: string, salt: string,
 ---iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?}
 
--- Key derivation function. 
+-- Key derivation function.
 --
 -- Will throw an error if type is unsupported or kdf_options are wrong
 --
@@ -361,23 +361,34 @@ function NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
   return unixtime_milliseconds .. "-" .. rand_hex
 end
 
-
 --[[
-Description - hash_password: Hash a password with a salt.
+Description - hash_password: Hash a password with a salt. All supported algorithms produce
+a output hash length of 32 bytes, which is returned in the format of:
+"algorithm$iterations$b64_salt$b64_pw_hash"
+
 
 Key derivation method with support for the following pseudorandom functions:
    - PBKDF2_SHA512 (default) - PBKDF2_HMAC-SHA512
    - PBKDF2_SHA256 - PBKDF2_HMAC-SHA256
+   - ARGON2I - OpenSSL version >= 3.2
+   - ARGON2ID - OpenSSL version >= 3.2
+
 
 Parameters:
   - password: string - the password to hash.
     Password must not be empty and be 8 or more characters.
   - salt: string - Optional salt to use or secure random salt will be generated.
   - iterations: number - Optional number of iterations to use for hashing.
-    Default is 250,000 iterations, but can be set to a higher value for more security.
+    Default iterations for supported algorithms:
+     - pbkdf2_sha512: 250000
+     - pbkdf2_sha256: 300000
+     - argon2i: 10
+     - argon2id: 10
   - algorithm: string - Optional password hashing algorithm to use. Supports the following:
     - "pbkdf2_sha512" (default)
-    - "pbkdf2_sha256" 
+    - "pbkdf2_sha256"
+    - "argon2i" - OpenSSL version >= 3.2
+    - "argon2id" - OpenSSL version >= 3.2
 
 Returns:
   - hash_format: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
@@ -385,6 +396,7 @@ Returns:
 Throws:
   - If the password is empty or not a string, it will throw an error.
   - If the salt is empty or not a string, it will throw an error.
+  - If unsupported algorithm is used, it will throw an error.
 
 Example:
     - hash_password("password", "salt") - returns a hashed password.
@@ -392,7 +404,7 @@ Example:
 -- Pasword hashing using PBKDF2_HMAC-SHA512 pseudorandom function by default
 ---@param password string Password to hash. Must be 8 or more characters.
 ---@param salt string? Salt to use for hashing, or nil to generate a secure random salt.
----@param iterations number? Optional number of iterations, default is 250,000 iterations.
+---@param iterations number? Optional number of iterations.
 ---@param algorithm string? Optional hashing algorithm, default pbkdf2_sha512
 ---@return string hash_format format of "algorithm$iterations$b64_salt$b64_pw_hash"
 function NASCrypto.hash_password(password, salt, iterations, algorithm)
@@ -413,27 +425,43 @@ function NASCrypto.hash_password(password, salt, iterations, algorithm)
   end
 
   local kdf_options = {}
-  iterations = iterations or 250000 -- Default to 250,000 iterations
   salt = salt or NASCrypto.get_random_bytes(24)
   algorithm = algorithm or "pbkdf2_sha512"
 
   -- check for supported algorithms
   algorithm = string.lower(algorithm) -- Normalize to lowercase for comparison
   if algorithm == "pbkdf2_sha512" then
+    -- Default to 250,000 iterations
+    iterations = iterations or 250000
     kdf_options.type = "pbkdf2"
     kdf_options.md = "sha512"
-    kdf_options.outlen = 64 -- SHA512 native output size is 64 bytes
+    kdf_options.outlen = 32 -- SHA512 native output size is 64 bytes
+    kdf_options.iter = iterations
   elseif algorithm == "pbkdf2_sha256" then
+    -- Default to 300,000 iterations
+    iterations = iterations or 300000
     kdf_options.type = "pbkdf2"
     kdf_options.md = "sha256"
     kdf_options.outlen = 32 -- SHA256 native output size is 32 bytes
+    kdf_options.iter = iterations
+  elseif algorithm == "argon2i" then
+    -- Default to 10 iterations
+    iterations = iterations or 10
+    kdf_options.type = "argon2i"
+    kdf_options.outlen = 32
+    kdf_options.iter = iterations
+  elseif algorithm == "argon2id" then
+    -- Default to 10 iterations
+    iterations = iterations or 10
+    kdf_options.type = "argon2id"
+    kdf_options.outlen = 32
+    kdf_options.iter = iterations
   else
     error("Unsupported algorithm: " .. algorithm)
   end
 
   kdf_options.pass = password
   kdf_options.salt = salt
-  kdf_options.iter = iterations
 
   local pass_hash_bytes = NASCrypto.kdf_derive(kdf_options)
 
@@ -443,7 +471,6 @@ function NASCrypto.hash_password(password, salt, iterations, algorithm)
 
   return string.format(str_format, algorithm, iterations, b64salt, b64hash)
 end
-
 
 --[[
 Description - hash_password_verify:
@@ -493,7 +520,6 @@ function NASCrypto.hash_password_verify(password, hash_format)
   local salt = NASCrypto.base64decode(b64_salt, true)
 
   return hash_format == NASCrypto.hash_password(password, salt, iterations, algorithm)
-
 end
 
 --[[

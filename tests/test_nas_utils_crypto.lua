@@ -188,6 +188,10 @@ function Test_NASCrypto.test_hash_password()
   lu.assertStrContains(hash, "pbkdf2_sha256$")
   lu.assertError(nas_crypto.hash_password, "short", salt)
   lu.assertError(nas_crypto.hash_password, pw, 12345)
+  -- Test Argon2id support
+  hash = nas_crypto.hash_password(pw, nil, nil, "argon2id")
+  lu.assertStrContains(hash, "argon2id$")
+  lu.assertTrue(nas_crypto.hash_password_verify(pw, hash))
 end
 
 function Test_NASCrypto.test_hash_password_verify()
