@@ -363,18 +363,21 @@ end
 
 
 --[[
-Description - hash_password:
-- Hash a password with a salt.
-- PBKDF2 key derivation method, using HMAC-SHA512 pseudorandom function by default
+Description - hash_password: Hash a password with a salt.
+
+Key derivation method with support for the following pseudorandom functions:
+   - PBKDF2_SHA512 (default) - PBKDF2_HMAC-SHA512
+   - PBKDF2_SHA256 - PBKDF2_HMAC-SHA256
 
 Parameters:
   - password: string - the password to hash.
     Password must not be empty and be 8 or more characters.
-  - salt: string - Optional salt to use.  If not provided, a random salt will be generated.
+  - salt: string - Optional salt to use or secure random salt will be generated.
   - iterations: number - Optional number of iterations to use for hashing.
     Default is 250,000 iterations, but can be set to a higher value for more security.
-  - algorithm: string - Optional password hashing algorithm to use.
-    Default and only supported algorithm is "pbkdf2_sha512".
+  - algorithm: string - Optional password hashing algorithm to use. Supports the following:
+    - "pbkdf2_sha512" (default)
+    - "pbkdf2_sha256" 
 
 Returns:
   - hash_format: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
@@ -388,7 +391,7 @@ Example:
 ]]
 -- Pasword hashing using PBKDF2_HMAC-SHA512 pseudorandom function by default
 ---@param password string Password to hash. Must be 8 or more characters.
----@param salt string? Salt to use for hashing, or nil to generate a random salt.
+---@param salt string? Salt to use for hashing, or nil to generate a secure random salt.
 ---@param iterations number? Optional number of iterations, default is 250,000 iterations.
 ---@param algorithm string? Optional hashing algorithm, default pbkdf2_sha512
 ---@return string hash_format format of "algorithm$iterations$b64_salt$b64_pw_hash"
@@ -405,16 +408,25 @@ function NASCrypto.hash_password(password, salt, iterations, algorithm)
     error("iterations must be empty or must be a number")
   end
 
+  if algorithm ~= nil and type(algorithm) ~= "string" then
+    error("algorithm must be empty or must be a string like 'pbkdf2_sha512'")
+  end
+
   local kdf_options = {}
   iterations = iterations or 250000 -- Default to 250,000 iterations
   salt = salt or NASCrypto.get_random_bytes(24)
   algorithm = algorithm or "pbkdf2_sha512"
 
   -- check for supported algorithms
+  algorithm = string.lower(algorithm) -- Normalize to lowercase for comparison
   if algorithm == "pbkdf2_sha512" then
     kdf_options.type = "pbkdf2"
     kdf_options.md = "sha512"
     kdf_options.outlen = 64 -- SHA512 native output size is 64 bytes
+  elseif algorithm == "pbkdf2_sha256" then
+    kdf_options.type = "pbkdf2"
+    kdf_options.md = "sha256"
+    kdf_options.outlen = 32 -- SHA256 native output size is 32 bytes
   else
     error("Unsupported algorithm: " .. algorithm)
   end

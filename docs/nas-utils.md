@@ -166,10 +166,8 @@ print(level) -- "DEBUG"
 
 ## License
 
-MIT License
-
----
-
-## Author
-
-Michael Stephan, NetApplied Solutions
+MIT License.  
+Copyright (c) 2025 Net Applied Solutions, LLC.  
+All rights reserved.
+    
+See [LICENSE](./LICENSE) for details.

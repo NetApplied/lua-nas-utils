@@ -58,10 +58,9 @@ logger:error("An error occurred")
 
 ## License
 
-MIT License
+MIT License.  
+Copyright (c) 2025 Net Applied Solutions, LLC.  
+All rights reserved.
+    
+See [LICENSE](./LICENSE) for details.
 
----
-
-## Author
-
-Michael Stephan, NetApplied Solutions

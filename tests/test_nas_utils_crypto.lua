@@ -184,6 +184,8 @@ function Test_NASCrypto.test_hash_password()
   local hash = nas_crypto.hash_password(pw, salt)
   lu.assertIsString(hash)
   lu.assertStrContains(hash, "pbkdf2_sha512$")
+  hash = nas_crypto.hash_password(pw, salt, nil, "pbkdf2_sha256")
+  lu.assertStrContains(hash, "pbkdf2_sha256$")
   lu.assertError(nas_crypto.hash_password, "short", salt)
   lu.assertError(nas_crypto.hash_password, pw, 12345)
 end

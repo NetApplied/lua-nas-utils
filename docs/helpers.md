@@ -24,6 +24,7 @@ A Lua module providing helper utilities for strings, tables, datetime, numbers, 
 - [clone_function](#clone_function)
 - [_exec_popen](#_exec_popen)
 - [Usage Example](#usage-example)
+- [See Also](#see-also)
 
 ---
 
@@ -300,12 +301,19 @@ helpers.wait(1000) -- waits 1 second
 
 ---
 
-## License
-
-MIT License
+## See Also
+- [nas-utils (overview)](./nas-utils.md)
+- [crypto](./crypto.md)
+- [jwt](./jwt.md)
+- [strings](./strings.md)
+- [logger_rolling_file](./logger_rolling_file.md)
 
 ---
 
-## Author
+## License
 
-Michael Stephan, NetApplied Solutions
+MIT License.  
+Copyright (c) 2025 Net Applied Solutions, LLC.  
+All rights reserved.
+    
+See [LICENSE](./LICENSE) for details.

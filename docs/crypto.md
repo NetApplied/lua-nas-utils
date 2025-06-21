@@ -19,6 +19,7 @@ A Lua module providing cryptographic utilities for encoding, encryption, random 
 - [hash_password_verify](#hash_password_verify)
 - [unixtime_milliseconds](#unixtime_milliseconds)
 - [Usage Example](#usage-example)
+- [See Also](#see-also)
 
 ---
 
@@ -248,13 +249,21 @@ local ok = crypto.hash_password_verify("mysecretpassword", hash)
 
 ---
 
-## License
-
-MIT License
+## See Also
+- [nas-utils (overview)](./nas-utils.md)
+- [jwt](./jwt.md)
+- [strings](./strings.md)
+- [helpers](./helpers.md)
+- [logger_rolling_file](./logger_rolling_file.md)
 
 ---
 
-## Author
+## License
 
-Michael Stephan, NetApplied Solutions
+MIT License.  
+Copyright (c) 2025 Net Applied Solutions, LLC.  
+All rights reserved.
+    
+See [LICENSE](./LICENSE) for details.
+
 
