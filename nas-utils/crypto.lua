@@ -5,7 +5,7 @@ local NASCrypto      = {}
 NASCrypto._AUTHORS   = "Michael Stephan"
 NASCrypto._VERSION   = "0.3.2-1"
 NASCrypto._LICENSE   = "MIT License"
-NASCrypto._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+NASCrypto._COPYRIGHT = "Copyright (c) 2025 Net Applied Solutions, LLC"
 
 local socket         = require("socket")         -- luasocket
 local rand           = require("openssl.rand")   -- luaossl

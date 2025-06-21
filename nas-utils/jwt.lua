@@ -5,7 +5,7 @@ local NASJwt      = {}
 NASJwt._AUTHORS   = "Michael Stephan"
 NASJwt._VERSION   = "0.3.2-1"
 NASJwt._LICENSE   = "MIT License"
-NASJwt._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+NASJwt._COPYRIGHT = "Copyright (c) 2025 Net Applied Solutions, LLC"
 
 local json        = require 'cjson'
 local hmac_hash   = require("nas-utils.crypto").hmac_hash

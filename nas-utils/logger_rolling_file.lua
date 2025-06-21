@@ -5,7 +5,7 @@ local LoggerRollingFile      = {}
 LoggerRollingFile._AUTHORS   = "Michael Stephan"
 LoggerRollingFile._VERSION   = "0.3.2-1"
 LoggerRollingFile._LICENSE   = "MIT License"
-LoggerRollingFile._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+LoggerRollingFile._COPYRIGHT = "Copyright (c) 2025 Net Applied Solutions, LLC"
 
 
 ---@diagnostic disable-next-line: undefined-doc-name

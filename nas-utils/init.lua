@@ -5,7 +5,7 @@ local modules               = {}
 modules._AUTHORS            = "Michael Stephan"
 modules._VERSION            = "0.3.2-1"
 modules._LICENSE            = "MIT License"
-modules._COPYRIGHT          = "Copyright (c) 2025 NetApplied Solutions"
+modules._COPYRIGHT          = "Copyright (c) 2025 Net Applied Solutions, LLC"
 modules._HOMEPAGE           = "https://github.com/NetApplied/lua-nas-utils"
 modules._DESCRIPTION        = "A collection of Lua utilities for NAS systems."
 

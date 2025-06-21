@@ -2,10 +2,10 @@
 
 local NASStrings      = {}
 
-NASStrings._AUTHORS   = "Michael Stephan"
-NASStrings._VERSION   = "0.3.1-1"
+NASStrings._AUTHORS   = "liaozhaoyan, Michael Stephan"
+NASStrings._VERSION   = "0.3.2-1"
 NASStrings._LICENSE   = "MIT License"
-NASStrings._COPYRIGHT = "Copyright (c) 2025 NetApplied Solutions"
+NASStrings._COPYRIGHT = "Copyright (c) 2023 liaozhaoyan"
 
 
 local sub = string.sub
@@ -120,7 +120,7 @@ function NASStrings.ishex(s)
     return matched and true or false
 end
 
---- If the string is a combination of alfanumeric characters, the function
+--- If the string is a combination of alphanumeric characters, the function
 --- returns true, otherwise it returns false.
 --- --
 --- @param s string
