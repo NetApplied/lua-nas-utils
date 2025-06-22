@@ -1,4 +1,5 @@
 -- nas-utils.crypto.lua
+-- TODO: Create functions for encrypting and decrypting with secret using kdf
 
 local NASCrypto      = {}
 
@@ -291,6 +292,66 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   return true, decrypted_data
 end
 
+-- Encrypt data with a secure secret. Uses key derivation function to generate key based
+-- on the provided secret.
+-- Returns an encrypted token string in the format of:
+-- "b64_cipher_salt_iv_tag$b64_encrypted_data"
+---@param secret string The secret key to use for encryption.
+---@param data string The data to encrypt.
+---@param cipher_type Enum_CipherType? Optional cipher type enum, default is AES-256-GCM.
+---@return boolean status Returns false if error with second return value as error message
+---@return string encrypted_token Token string "b64_cipher_salt_iv_tag$b64_encrypted_data"
+function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
+  local encrypted_token = ""
+  if secret == nil or type(secret) ~= "string" then
+    return false, "secret must not be nil and must be a string"
+  end
+
+  if data == nil or type(data) ~= "string" then
+    return false, "data must not be nil and must be a string"
+  end
+
+  if cipher_type ~= nil and type(cipher_type) ~= "table" then
+    return false, "cipher_type must be empty or must be Enum_CipherType table"
+  end
+
+  local ciphers = require("nas-utils").CipherType
+
+  cipher_type = cipher_type or ciphers.AES_256_GCM
+
+  -- TODO: Implement encryption logic here
+
+  return true, encrypted_token
+end
+
+function NASCrypto.decrypt_with_secret(secret, encryption_token)
+  if secret == nil or type(secret) ~= "string" then
+    error("secret must not be nil and must be a string")
+  end
+
+  if encryption_token == nil or type(encryption_token) ~= "string" then
+    error("encryption_token must not be nil and must be a string")
+  end
+
+  local parts = { encryption_token:match('([^$]+)$([^$]+)') }
+
+  if #parts ~= 2 then
+    error("Invalid encryption_token, expected 'b64_cipher_salt_iv_tag$b64_encrypted_data'")
+  end
+
+  local json = require("cjson")
+  local crypto_params, encrypted_data = unpack(parts)
+  -- crypto_params_json is {cipher_type: string, salt:string, iv:number, tag:number}
+  crypto_params = json.decode(NASCrypto.base64decode(crypto_params, true))
+  encrypted_data = NASCrypto.base64decode(encrypted_data, true)
+
+  crypto_params.iv = tonumber(crypto_params.iv) or 0
+
+
+
+  -- TODO: Implement decryption logic here
+end
+
 -- Generates cryptographically secure random bytes
 --
 -- Throws an error if num_bytes is not a number or luaossl rand.ready is false
@@ -391,7 +452,7 @@ Parameters:
     - "argon2id" - OpenSSL version >= 3.2
 
 Returns:
-  - hash_format: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
+  - hash_token: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
 
 Throws:
   - If the password is empty or not a string, it will throw an error.
@@ -399,14 +460,14 @@ Throws:
   - If unsupported algorithm is used, it will throw an error.
 
 Example:
-    - hash_password("password", "salt") - returns a hashed password.
+    - hash_password("password", "salt") - returns a hashed password token.
 ]]
 -- Pasword hashing using PBKDF2_HMAC-SHA512 pseudorandom function by default
 ---@param password string Password to hash. Must be 8 or more characters.
 ---@param salt string? Salt to use for hashing, or nil to generate a secure random salt.
 ---@param iterations number? Optional number of iterations.
 ---@param algorithm string? Optional hashing algorithm, default pbkdf2_sha512
----@return string hash_format format of "algorithm$iterations$b64_salt$b64_pw_hash"
+---@return string hash_token format of "algorithm$iterations$b64_salt$b64_pw_hash"
 function NASCrypto.hash_password(password, salt, iterations, algorithm)
   if password == nil or type(password) ~= "string" or #password < 8 then
     error("password must not be empty and must be 8 or more characters")
@@ -474,7 +535,7 @@ end
 
 --[[
 Description - hash_password_verify:
-  - Verify a password against the provided hash_format string
+  - Verify a password against the provided hash_token string
     "algorithm$iterations$b64_salt$b64_pw_hash".
 
   - Return true if the hashed password is correct, and false otherwise.
@@ -482,7 +543,7 @@ Description - hash_password_verify:
 Parameters:
   - password: string - the password to verify.
     Password must not be empty and be 8 or more characters.
-  - hash_format: string - "algorithm$iterations$b64_salt$b64_pw_hash" to compare with.
+  - hash_token: string - "algorithm$iterations$b64_salt$b64_pw_hash" to compare with.
 
 Returns:
   - true if the hashed password matches given password, and false otherwise.
@@ -495,23 +556,23 @@ Example:
   - hash_password_verify("password", "pbkdf2_sha512$250000$b64_salt$b64_pw_hash")
 
 ]]
--- Verifies a password against the hash format string
+-- Verifies a password against the hash_token string
 -- "algorithm$iterations$b64_salt$b64_pw_hash"
 ---@param password string Password must not be empty and be 8 or more characters
----@param hash_format string Format: "algorithm$iterations$b64_salt$b64_pw_hash"
+---@param hash_token string Format: "algorithm$iterations$b64_salt$b64_pw_hash"
 ---@return boolean verified Returns true if password matches hash, false otherwise
-function NASCrypto.hash_password_verify(password, hash_format)
+function NASCrypto.hash_password_verify(password, hash_token)
   if password == nil or type(password) ~= "string" or #password < 8 then
     error("password must not be empty and must be 8 or more characters")
   end
 
-  if hash_format == nil or type(hash_format) ~= "string" then
-    error("hash_format must not be empty and must be a string")
+  if hash_token == nil or type(hash_token) ~= "string" then
+    error("hash_token must not be empty and must be a string")
   end
 
-  local parts = { hash_format:match('([^$]+)$(%d+)$([^$]+)$([^$]+)') }
+  local parts = { hash_token:match('([^$]+)$(%d+)$([^$]+)$([^$]+)') }
   if #parts ~= 4 then
-    error("Invalid hash format, expected 'algorithm$iterations$b64_salt$b64_pw_hash'")
+    error("Invalid hash_token, expected 'algorithm$iterations$b64_salt$b64_pw_hash'")
   end
 
   local algorithm, iterations, b64_salt, _ = unpack(parts)
@@ -519,7 +580,7 @@ function NASCrypto.hash_password_verify(password, hash_format)
 
   local salt = NASCrypto.base64decode(b64_salt, true)
 
-  return hash_format == NASCrypto.hash_password(password, salt, iterations, algorithm)
+  return hash_token == NASCrypto.hash_password(password, salt, iterations, algorithm)
 end
 
 --[[

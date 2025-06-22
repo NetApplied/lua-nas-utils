@@ -201,20 +201,20 @@ NASCrypto.hash_password(password, salt, iterations, algorithm)
 - `salt` (`string?`): Salt string (optional; secure random salt generated if not provided).
 - `iterations` (`number?`): Number of iterations (default: 250000 for pbkdf2_sha512, 300000 for pbkdf2_sha256, 10000 for argon2i/argon2id).
 - `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512"). **Supported values:** `"pbkdf2_sha512"`, `"pbkdf2_sha256"`, `"argon2i"`, `"argon2id"`.
-- **Returns:** `string` Hash format: `algorithm$iterations$b64_salt$b64_pw_hash`.
+- **Returns:** `string` hash_token formatted as: `algorithm$iterations$b64_salt$b64_pw_hash`.
 
 ---
 
 ## hash_password_verify
 
-**Verify a password against a hash format string.**
+**Verify a password against a hash token string.**
 
 ```lua
-NASCrypto.hash_password_verify(password, hash_format)
+NASCrypto.hash_password_verify(password, hash_token)
 ```
 
 - `password` (`string`): Password to verify (min 8 chars).
-- `hash_format` (`string`): Hash format string: `algorithm$iterations$b64_salt$b64_pw_hash`.
+- `hash_token` (`string`): hash token formatted as: `algorithm$iterations$b64_salt$b64_pw_hash`.
 - **Returns:** `boolean` True if password matches.
 
 ---
