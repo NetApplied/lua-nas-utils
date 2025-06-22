@@ -296,12 +296,12 @@ end
 -- Encrypt data with a secure secret. Uses key derivation function to generate key based
 -- on the provided secret.
 -- Returns an encrypted token string in the format of:
--- "b64_cipher_salt_iv_tag$b64_encrypted_data"
+-- "b64_json_crypto_params$b64_encrypted_data"
 ---@param secret string The secret key to use for encryption.
 ---@param data string The data to encrypt.
 ---@param cipher_type Enum_CipherType? Optional cipher type enum, default is AES-256-GCM.
 ---@return boolean status Returns false if error with second return value as error message
----@return string encrypted_token Token string "b64_cipher_salt_iv_tag$b64_encrypted_data"
+---@return string encrypted_token Token string "b64_json_crypto_params$b64_encrypted_data"
 function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
   local encrypted_token = ""
   if secret == nil or type(secret) ~= "string" then
@@ -323,9 +323,20 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
   -- TODO: Implement encryption logic here. Create crypto params table to contain everything
   -- required to decrypt including kdf_options used.
 
+  -- generate key from password using kdf
+  -- store kdf_options to send back with crypto_params
+  local crypto_params = {}
+  local kdf_options = {}
+
+
   return true, encrypted_token
 end
 
+-- Decrypt data using a secret and an encryption token. 
+-- The encryption token is expected to be in the format:
+--  'b64_json_crypto_params$b64_encrypted_data'. 
+---@param secret string
+---@param encryption_token string
 function NASCrypto.decrypt_with_secret(secret, encryption_token)
   if secret == nil or type(secret) ~= "string" then
     error("secret must not be nil and must be a string")
@@ -338,12 +349,12 @@ function NASCrypto.decrypt_with_secret(secret, encryption_token)
   local parts = { encryption_token:match('([^$]+)$([^$]+)') }
 
   if #parts ~= 2 then
-    error("Invalid encryption_token, expected 'b64_cipher_salt_iv_tag$b64_encrypted_data'")
+    error("Invalid encryption_token, expected 'b64_json_crypto_params$b64_encrypted_data'")
   end
 
   local json = require("cjson")
   local crypto_params, encrypted_data = unpack(parts)
-  -- crypto_params_json is {cipher_type: string, salt:string, iv:number, tag:number}
+  -- crypto_params_json is {cipher_type: Enum_CipherType, salt:string, iv:number, tag:string}
   crypto_params = json.decode(NASCrypto.base64decode(crypto_params, true))
   encrypted_data = NASCrypto.base64decode(encrypted_data, true)
 
