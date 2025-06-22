@@ -292,6 +292,7 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   return true, decrypted_data
 end
 
+
 -- Encrypt data with a secure secret. Uses key derivation function to generate key based
 -- on the provided secret.
 -- Returns an encrypted token string in the format of:
@@ -319,7 +320,8 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
 
   cipher_type = cipher_type or ciphers.AES_256_GCM
 
-  -- TODO: Implement encryption logic here
+  -- TODO: Implement encryption logic here. Create crypto params table to contain everything
+  -- required to decrypt including kdf_options used.
 
   return true, encrypted_token
 end
@@ -347,9 +349,11 @@ function NASCrypto.decrypt_with_secret(secret, encryption_token)
 
   crypto_params.iv = tonumber(crypto_params.iv) or 0
 
+  -- derive key from secret
 
+  -- TODO: Implement decryption logic here. First work on encryp_with_secret, so that
+  -- crypto_params is a table with all required fields
 
-  -- TODO: Implement decryption logic here
 end
 
 -- Generates cryptographically secure random bytes
