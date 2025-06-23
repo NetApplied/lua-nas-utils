@@ -8,13 +8,15 @@ NASCrypto._VERSION   = "0.3.2-1"
 NASCrypto._LICENSE   = "MIT License"
 NASCrypto._COPYRIGHT = "Copyright (c) 2025 Net Applied Solutions, LLC"
 
-local socket         = require("socket")         -- luasocket
+local json           = require("cjson")
+local b64encode      = require("mime").b64       -- luasocket
+local b64decode      = require("mime").unb64     -- luasocket
 local rand           = require("openssl.rand")   -- luaossl
 local cipher         = require("openssl.cipher") -- luaossl
 local hmac           = require("openssl.hmac")   -- luaossl
 local kdf            = require("openssl.kdf")    -- luaossl
-local b64encode      = require("mime").b64       -- luasocket
-local b64decode      = require("mime").unb64     -- luasocket
+local socket         = require("socket")         -- luasocket
+
 
 
 --[[
@@ -292,7 +294,6 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   return true, decrypted_data
 end
 
-
 -- Encrypt data with a secure secret. Uses key derivation function to generate key based
 -- on the provided secret.
 -- Returns an encrypted token string in the format of:
@@ -320,21 +321,53 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
 
   cipher_type = cipher_type or ciphers.AES_256_GCM
 
-  -- TODO: Implement encryption logic here. Create crypto params table to contain everything
-  -- required to decrypt including kdf_options used.
+  
 
   -- generate key from password using kdf
   -- store kdf_options to send back with crypto_params
   local crypto_params = {}
-  local kdf_options = {}
 
+  local salt = NASCrypto.get_random_bytes(24)
+
+  local kdf_options = {}
+  kdf_options.type = "pbkdf2"
+  kdf_options.md = "sha512"
+  kdf_options.outlen = 32
+  kdf_options.iter = 250000
+  kdf_options.pass = secret
+  kdf_options.salt = salt
+
+  local encryption_key = NASCrypto.kdf_derive(kdf_options)
+
+  -- encrypt the data
+  local ok, encrypted_data_table = NASCrypto.encrypt(cipher_type, data, encryption_key)
+  if not ok then
+    local error_message = encrypted_data_table
+    return false, "encrypt_with_secret failed: " .. error_message
+  end
+
+  -- create crypto params for decryption
+  -- base64encode all binary string data before json encoding
+  crypto_params.kdf_opts = {
+    type = kdf_options.type,
+    md = kdf_options.md,
+    outlen = kdf_options.outlen,
+    iter = kdf_options.iter,
+    salt = NASCrypto.base64encode(kdf_options.salt, true)
+  }
+  crypto_params.iv = NASCrypto.base64encode(encrypted_data_table.iv, true)
+  if encrypted_data_table.tag then
+    crypto_params.tag = NASCrypto.base64encode(encrypted_data_table.tag, true)
+  end
+
+  -- TODO: Complete json encoding and return the encrypted token.
 
   return true, encrypted_token
 end
 
--- Decrypt data using a secret and an encryption token. 
+-- Decrypt data using a secret and an encryption token.
 -- The encryption token is expected to be in the format:
---  'b64_json_crypto_params$b64_encrypted_data'. 
+--  'b64_json_crypto_params$b64_encrypted_data'.
 ---@param secret string
 ---@param encryption_token string
 function NASCrypto.decrypt_with_secret(secret, encryption_token)
@@ -352,7 +385,6 @@ function NASCrypto.decrypt_with_secret(secret, encryption_token)
     error("Invalid encryption_token, expected 'b64_json_crypto_params$b64_encrypted_data'")
   end
 
-  local json = require("cjson")
   local crypto_params, encrypted_data = unpack(parts)
   -- crypto_params_json is {cipher_type: Enum_CipherType, salt:string, iv:number, tag:string}
   crypto_params = json.decode(NASCrypto.base64decode(crypto_params, true))
@@ -364,7 +396,6 @@ function NASCrypto.decrypt_with_secret(secret, encryption_token)
 
   -- TODO: Implement decryption logic here. First work on encryp_with_secret, so that
   -- crypto_params is a table with all required fields
-
 end
 
 -- Generates cryptographically secure random bytes
