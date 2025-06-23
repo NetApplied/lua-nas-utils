@@ -215,8 +215,18 @@ function NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
   end
 
   -- Encrypt the data
-  local encrypted_data = ctx:update(data)
-  encrypted_data = encrypted_data .. ctx:final()
+  local error_message, encrypted_data, final_encrypted_data
+  encrypted_data, error_message = ctx:update(data)
+  if not encrypted_data then
+    return false, "Encrypt update failed: " .. error_message
+  end
+  final_encrypted_data, error_message = ctx:final()
+  
+  if not final_encrypted_data then
+    return false, "Encrypt final failed: " .. error_message
+  end
+
+  encrypted_data = encrypted_data .. final_encrypted_data
 
   -- get authentication tag if supported by cipher
   local tag = cipher_type.has_tag and ctx:getTag(tag_length) or nil
@@ -288,8 +298,18 @@ function NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, tag)
   end
 
   -- Decrypt the data
-  decrypted_data = ctx:update(encrypted_data)
-  decrypted_data = decrypted_data .. ctx:final()
+  local error_message, final_decrypted_data
+  decrypted_data, error_message = ctx:update(encrypted_data)
+  if not decrypted_data then
+    return false, "Decryption update failed: " .. error_message
+  end
+
+  final_decrypted_data, error_message = ctx:final()
+  if not final_decrypted_data then
+    return false, "Decryption final failed: " .. error_message
+  end
+
+  decrypted_data = decrypted_data .. final_decrypted_data
 
   return true, decrypted_data
 end
@@ -403,12 +423,26 @@ function NASCrypto.decrypt_with_secret(secret, encryption_token)
   end
 
   crypto_params.kdf_opts.salt = NASCrypto.base64decode(crypto_params.kdf_opts.salt, true)
-
+  crypto_params.kdf_opts.pass = secret
 
   -- derive key from secret
+  local encryption_key = NASCrypto.kdf_derive(crypto_params.kdf_opts)
 
-  -- TODO: Implement decryption logic here. First work on encryp_with_secret, so that
-  -- crypto_params is a table with all required fields
+  -- decrypt data using the derived key, cipher_type, iv and tag (tag is nil or tag)
+  local ok, decrypted_data = NASCrypto.decrypt(
+    crypto_params.cipher_type,
+    encrypted_data,
+    encryption_key,
+    crypto_params.iv,
+    crypto_params.tag
+  )
+
+  if not ok then
+    local error_message = decrypted_data
+    return false, "decrypt_with_secret error: " .. error_message
+  end
+
+  return true, decrypted_data
 end
 
 -- Generates cryptographically secure random bytes

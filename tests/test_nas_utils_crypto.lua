@@ -120,6 +120,15 @@ function Test_NASCrypto.test_encrypt_decrypt()
   local ok2, dec = nas_crypto.decrypt(cipher_type, enc.encrypted_data, key, enc.iv)
   lu.assertTrue(ok2)
   lu.assertEquals(dec, data)
+
+  -- test decrypt with wrong key
+  ok, enc = nas_crypto.encrypt(cipher_type, data, key, iv)
+  lu.assertTrue(ok)
+  lu.assertIsTable(enc)
+  local key2 = string.rep("a", 32)
+  ok2, dec = nas_crypto.decrypt(cipher_type, enc.encrypted_data, key2, enc.iv)
+  lu.assertFalse(ok2)
+
 end
 
 function Test_NASCrypto.test_encrypt_decrypt_gcm()
@@ -167,6 +176,21 @@ function Test_NASCrypto.test_decrypt_errors()
   lu.assertFalse(select(1, nas_crypto.decrypt("notatable", enc, key, iv)))
   local gcm_type = { name = "aes-128-gcm", key_length = 16, iv_length = 12, has_tag = true }
   lu.assertFalse(select(1, nas_crypto.decrypt(gcm_type, enc, key, iv)))
+end
+
+function Test_NASCrypto.test_encrypt_decrypt_with_secret()
+  local data = "data"
+  local ok, encryption_token = nas_crypto.encrypt_with_secret("secret", data)
+  lu.assertIsTrue(ok)
+  lu.assertIsString(encryption_token)
+  local ok2, decrypted_data = nas_crypto.decrypt_with_secret("secret", encryption_token)
+  lu.assertIsTrue(ok2)
+  lu.assertEquals(decrypted_data, data)
+
+  -- Test decryption with wrong secret
+  ok2, decrypted_data = nas_crypto.decrypt_with_secret("wrongsecret", encryption_token)
+  lu.assertIsFalse(ok2)
+  lu.assertIsString(decrypted_data)
 end
 
 function Test_NASCrypto.test_get_random_bytes()
