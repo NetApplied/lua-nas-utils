@@ -321,8 +321,6 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
 
   cipher_type = cipher_type or ciphers.AES_256_GCM
 
-  
-
   -- generate key from password using kdf
   -- store kdf_options to send back with crypto_params
   local crypto_params = {}
@@ -341,6 +339,7 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
 
   -- encrypt the data
   local ok, encrypted_data_table = NASCrypto.encrypt(cipher_type, data, encryption_key)
+
   if not ok then
     local error_message = encrypted_data_table
     return false, "encrypt_with_secret failed: " .. error_message
@@ -348,6 +347,7 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
 
   -- create crypto params for decryption
   -- base64encode all binary string data before json encoding
+  crypto_params.cipher_type = cipher_type
   crypto_params.kdf_opts = {
     type = kdf_options.type,
     md = kdf_options.md,
@@ -360,7 +360,12 @@ function NASCrypto.encrypt_with_secret(secret, data, cipher_type)
     crypto_params.tag = NASCrypto.base64encode(encrypted_data_table.tag, true)
   end
 
-  -- TODO: Complete json encoding and return the encrypted token.
+  -- Complete json encoding and return the encrypted token.
+  -- No need to create HMAC hash signature - default cipher AES_256_GCM creates auth tag
+  local b64_json_crypto_params = NASCrypto.base64encode(json.encode(crypto_params), true)
+  local b64_encrypted_data = NASCrypto.base64encode(encrypted_data_table.encrypted_data, true)
+
+  encrypted_token = b64_json_crypto_params .. "$" .. b64_encrypted_data
 
   return true, encrypted_token
 end
@@ -385,12 +390,20 @@ function NASCrypto.decrypt_with_secret(secret, encryption_token)
     error("Invalid encryption_token, expected 'b64_json_crypto_params$b64_encrypted_data'")
   end
 
+  -- extract crypto_params and encrypted_data
   local crypto_params, encrypted_data = unpack(parts)
-  -- crypto_params_json is {cipher_type: Enum_CipherType, salt:string, iv:number, tag:string}
+  -- crypto_params_json is:
+  -- {cipher_type: Enum_CipherType, kdf_opts: table, b64_iv:string, b64_tag:string?}
   crypto_params = json.decode(NASCrypto.base64decode(crypto_params, true))
   encrypted_data = NASCrypto.base64decode(encrypted_data, true)
 
-  crypto_params.iv = tonumber(crypto_params.iv) or 0
+  crypto_params.iv = NASCrypto.base64decode(crypto_params.iv, true)
+  if crypto_params.tag then
+    crypto_params.tag = NASCrypto.base64decode(crypto_params.tag, true)
+  end
+
+  crypto_params.kdf_opts.salt = NASCrypto.base64decode(crypto_params.kdf_opts.salt, true)
+
 
   -- derive key from secret
 

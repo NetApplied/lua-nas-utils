@@ -77,10 +77,6 @@ function NASJwt.encode(payload, secret, jwt_alg)
     local encoded_header = b64encode(json.encode(header), true)
     local encoded_payload = b64encode(json.encode(payload), true)
 
-    if encoded_header == nil or encoded_payload == nil then
-        error("could not encode jwt header or payload")
-    end
-
     local signing_input = encoded_header .. '.' .. encoded_payload
     local signature = hmac_jwt(jwt_alg, secret, signing_input)
 
