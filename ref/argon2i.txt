@@ -179,7 +179,7 @@ openssl kdf -keylen 64 -kdfopt pass:password -kdfopt salt:NaCl \
 SCRYPT: scrypt provides three work factors that can be customized: N, r and p. 
 N, which has to be a positive power of two, is the general work factor and scales CPU time 
 in an approximately linear fashion. 
-r is the block size of the internally used hash function and 
+r is the block size of the internally used hash function (block size of 8 would give 64 byte output key length)
 p is the parallelization factor. 
 Both r and p need to be greater than zero. 
 The amount of RAM that scrypt requires for its computation is roughly (128 * N * r * p) bytes.
@@ -188,7 +188,7 @@ When N, r or p are not specified, they default to 1048576 (2^20), 8, and 1, resp
 The default amount of RAM that may be used by scrypt defaults to 1025 MiB.
 
 N: 8192 (2^13), r: 8, p: 1 = 128 * 8192 * 8 * 1 = 8388608 bytes (8 MiB)
-
+N: 16384(2^14), r: 8, p: 1 = 128 * 16384* 8 * 1 = 16777216 bytes (16 MiB)
 ==============
 
 https://stackoverflow.com/questions/58431973/argon2-library-that-hashes-passwords-without-a-secret-and-with-a-random-salt-tha

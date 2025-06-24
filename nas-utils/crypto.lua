@@ -1,5 +1,9 @@
 -- nas-utils.crypto.lua
--- TODO: Create functions for encrypting and decrypting with secret using kdf
+-- TODO: Add scrypt support for password hashing
+
+-- TODO: Change password hashing/verify to receive and return kdf_options
+-- instead of algorithm, iterations. This will allow support for any kdf
+-- algorithm in the future.  See encrypt_with_secret and decrypt_with_secret.
 
 local NASCrypto      = {}
 
@@ -105,7 +109,8 @@ function NASCrypto.base64decode(data, url_safe)
 end
 
 ---@alias Crypto_KdfOptions {type: string, outlen: number, pass: string, salt: string,
----iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?}
+---iter: number, md: Enum_DigestType?, key: string?, maxmem_bytes: number?, secret: string?,
+---N: number?, r: number?, p: number?}
 
 -- Key derivation function.
 --
@@ -538,11 +543,13 @@ Parameters:
      - pbkdf2_sha256: 300000
      - argon2i: 10
      - argon2id: 10
+     - scrypt: N: 16384(2^14), r: 8, p: 1 = 128 * 16384* 8 * 1 = 16777216 bytes (16 MiB) RAM 
   - algorithm: string - Optional password hashing algorithm to use. Supports the following:
     - "pbkdf2_sha512" (default)
     - "pbkdf2_sha256"
     - "argon2i" - OpenSSL version >= 3.2
     - "argon2id" - OpenSSL version >= 3.2
+    - "scrypt"
 
 Returns:
   - hash_token: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.

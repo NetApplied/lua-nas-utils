@@ -42,7 +42,7 @@ function Test_NASCrypto.test_base64decode()
   lu.assertEquals(decoded_standard, original_data)
 
   local encoded_url_safe = nas_crypto.base64encode(original_data, true) or ""
-  local decoded_url_safe = nas_crypto.base64decode(encoded_url_safe, true)
+  decoded_url_safe = nas_crypto.base64decode(encoded_url_safe, true)
   lu.assertEquals(decoded_url_safe, original_data)
 end
 
