@@ -113,6 +113,23 @@ NASCrypto.kdf_derive(kdf_options, output_hex)
 
 **Encrypt data using a specified cipher.**
 
+Supported ciphers include:
+ - AES_128_CBC
+ - AES_128_GCM
+ - AES_192_CBC
+ - AES_192_GCM
+ - AES_256_CBC
+ - AES_256_GCM
+ - BF_CBC
+ - BF_OFB
+ - CAMELLIA_128_CBC
+ - CAMELLIA_192_CBC
+ - CAMELLIA_256_CBC
+ - DES_CBC
+ - DES_EDE3_CBC
+ - RC4
+
+
 ```lua
 local status, result = NASCrypto.encrypt(cipher_type, data, key, iv, tag_length)
 ```
