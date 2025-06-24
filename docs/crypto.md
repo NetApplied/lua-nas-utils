@@ -12,6 +12,8 @@ A Lua module providing cryptographic utilities for encoding, encryption, random 
 - [kdf_derive](#kdf_derive)
 - [encrypt](#encrypt)
 - [decrypt](#decrypt)
+- [encrypt_with_secret](#encrypt_with_secret)
+- [decrypt_with_secret](#decrypt_with_secret)
 - [get_random_bytes](#get_random_bytes)
 - [get_random_hex](#get_random_hex)
 - [get_sequential_guid](#get_sequential_guid)
@@ -145,6 +147,45 @@ local status, result = NASCrypto.decrypt(cipher_type, encrypted_data, key, iv, t
 
 ---
 
+## encrypt_with_secret
+
+**Encrypt data with a secret, using a key derivation function and a secure cipher.**
+
+Returns an encrypted token string in the format:  
+`b64_json_crypto_params$b64_encrypted_data`
+
+```lua
+local status, encrypted_token = NASCrypto.encrypt_with_secret(secret, data, cipher_type)
+```
+
+- `secret` (`string`): The secret key to use for encryption.
+- `data` (`string`): The data to encrypt.
+- `cipher_type` (`Enum_CipherType?`): Optional cipher type enum (default: AES-256-GCM).
+- **Returns:**
+  - `status` (`boolean`): true if success, false if error
+  - `encrypted_token` (`string`): Encrypted token string if success, or error message if failure
+
+---
+
+## decrypt_with_secret
+
+**Decrypt data using a secret and an encrypted token string.**
+
+The encrypted token is expected to be in the format:  
+`b64_json_crypto_params$b64_encrypted_data`
+
+```lua
+local status, decrypted_data = NASCrypto.decrypt_with_secret(secret, encryption_token)
+```
+
+- `secret` (`string`): The secret key to use for decryption.
+- `encryption_token` (`string`): The encrypted token string.
+- **Returns:**
+  - `status` (`boolean`): true if success, false if error
+  - `decrypted_data` (`string`): Decrypted data if success, or error message if failure
+
+---
+
 ## get_random_bytes
 
 **Generate cryptographically secure random bytes.**
@@ -188,19 +229,33 @@ NASCrypto.get_sequential_guid(num_rand_bytes, uppercase)
 
 ## hash_password
 
-**Hash a password with a salt using PBKDF2-HMAC-SHA512, PBKDF2-HMAC-SHA256, Argon2i, or Argon2id.**
+**Hash a password with a salt using PBKDF2-HMAC-SHA512, PBKDF2-HMAC-SHA256, Argon2i, Argon2id, or Scrypt.**
 
 Note: Argon2i and Argon2id are only supported on systems with OpenSSL 3.2 or greater. Memcost
 option is not yet available, so high iteration count is used instead.
 
+Scrypt uses the following defaults:
+ - workfactor N: 16384(2^14), 
+ - block size r: 8, 
+ - paralellism factor p: 1
+ - Total memory cost = 128 * 16384 * 8 * 1 = 16777216 bytes (16 MiB) RAM of memcost
+ - To increase memory cost increase workfactor, or use kdf_derive() for different options.
+
 ```lua
-NASCrypto.hash_password(password, salt, iterations, algorithm)
+NASCrypto.hash_password(password, salt, algorithm, iterations)
 ```
 
 - `password` (`string`): Password (min 8 chars).
 - `salt` (`string?`): Salt string (optional; secure random salt generated if not provided).
-- `iterations` (`number?`): Number of iterations (default: 250000 for pbkdf2_sha512, 300000 for pbkdf2_sha256, 10000 for argon2i/argon2id).
-- `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512"). **Supported values:** `"pbkdf2_sha512"`, `"pbkdf2_sha256"`, `"argon2i"`, `"argon2id"`.
+- `algorithm` (`string?`): Hashing algorithm (default: "pbkdf2_sha512").  
+  **Supported values:** `"pbkdf2_sha512"`, `"pbkdf2_sha256"`, `"argon2i"`, `"argon2id"`, `"scrypt"`.
+- `iterations` (`number?`): Number of iterations or work factor.  
+  Defaults:  
+  - pbkdf2_sha512: 250000  
+  - pbkdf2_sha256: 300000  
+  - argon2i: 10000  
+  - argon2id: 10000  
+  - scrypt: 16384 (work factor N, must be a power of 2)
 - **Returns:** `string` hash_token formatted as: `algorithm$iterations$b64_salt$b64_pw_hash`.
 
 ---

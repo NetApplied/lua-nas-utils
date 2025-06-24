@@ -1,9 +1,4 @@
 -- nas-utils.crypto.lua
--- TODO: Add scrypt support for password hashing
-
--- TODO: Change password hashing/verify to receive and return kdf_options
--- instead of algorithm, iterations. This will allow support for any kdf
--- algorithm in the future.  See encrypt_with_secret and decrypt_with_secret.
 
 local NASCrypto      = {}
 
