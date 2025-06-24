@@ -165,7 +165,7 @@ end
 
 return modules
 
---[[ -- don't load modules dynamically, so LLS can
+--[[ -- don't load modules dynamically, so LLS can infer modules
 modules.path = "nas-utils."
 -- list of modules
 local module_names = {
