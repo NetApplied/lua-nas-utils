@@ -208,13 +208,13 @@ function Test_NASCrypto.test_hash_password()
   local hash = nas_crypto.hash_password(pw, salt)
   lu.assertIsString(hash)
   lu.assertStrContains(hash, "pbkdf2_sha512$")
-  hash = nas_crypto.hash_password(pw, salt, nil, "pbkdf2_sha256")
+  hash = nas_crypto.hash_password(pw, salt, "pbkdf2_sha256" )
   lu.assertStrContains(hash, "pbkdf2_sha256$")
   lu.assertError(nas_crypto.hash_password, "short", salt)
   lu.assertError(nas_crypto.hash_password, pw, 12345)
 
   -- Test Argon2id support - only supported on OpenSSL 3.2 or greater
-  hash = nas_crypto.hash_password(pw, nil, nil, "argon2id")
+  hash = nas_crypto.hash_password(pw, nil, "argon2id" )
   lu.assertStrContains(hash, "argon2id$")
   lu.assertTrue(nas_crypto.hash_password_verify(pw, hash))
 end

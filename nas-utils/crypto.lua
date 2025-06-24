@@ -531,12 +531,20 @@ Key derivation method with support for the following pseudorandom functions:
    - PBKDF2_SHA256 - PBKDF2_HMAC-SHA256
    - ARGON2I - OpenSSL version >= 3.2
    - ARGON2ID - OpenSSL version >= 3.2
+   - SCRYPT - using parameters N: work factor (power of 2), r: block size, p: parallelism
+     128 x N x r x p = memory cost in bytes. 
 
 
 Parameters:
   - password: string - the password to hash.
     Password must not be empty and be 8 or more characters.
   - salt: string - Optional salt to use or secure random salt will be generated.
+  - algorithm: string - Optional password hashing algorithm to use. Supports the following:
+    - "pbkdf2_sha512" (default)
+    - "pbkdf2_sha256"
+    - "argon2i" - OpenSSL version >= 3.2
+    - "argon2id" - OpenSSL version >= 3.2
+    - "scrypt"
   - iterations: number - Optional number of iterations to use for hashing.
     Default iterations for supported algorithms:
      - pbkdf2_sha512: 250000
@@ -544,12 +552,6 @@ Parameters:
      - argon2i: 10
      - argon2id: 10
      - scrypt: N: 16384(2^14), r: 8, p: 1 = 128 * 16384* 8 * 1 = 16777216 bytes (16 MiB) RAM 
-  - algorithm: string - Optional password hashing algorithm to use. Supports the following:
-    - "pbkdf2_sha512" (default)
-    - "pbkdf2_sha256"
-    - "argon2i" - OpenSSL version >= 3.2
-    - "argon2id" - OpenSSL version >= 3.2
-    - "scrypt"
 
 Returns:
   - hash_token: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
@@ -565,10 +567,10 @@ Example:
 -- Pasword hashing using PBKDF2_HMAC-SHA512 pseudorandom function by default
 ---@param password string Password to hash. Must be 8 or more characters.
 ---@param salt string? Salt to use for hashing, or nil to generate a secure random salt.
----@param iterations number? Optional number of iterations.
 ---@param algorithm string? Optional hashing algorithm, default pbkdf2_sha512
+---@param iterations number? Optional number of iterations.
 ---@return string hash_token format of "algorithm$iterations$b64_salt$b64_pw_hash"
-function NASCrypto.hash_password(password, salt, iterations, algorithm)
+function NASCrypto.hash_password(password, salt, algorithm, iterations)
   if password == nil or type(password) ~= "string" or #password < 8 then
     error("password must not be empty and must be 8 or more characters")
   end
@@ -680,7 +682,7 @@ function NASCrypto.hash_password_verify(password, hash_token)
 
   local salt = NASCrypto.base64decode(b64_salt, true)
 
-  return hash_token == NASCrypto.hash_password(password, salt, iterations, algorithm)
+  return hash_token == NASCrypto.hash_password(password, salt, algorithm, iterations)
 end
 
 --[[
