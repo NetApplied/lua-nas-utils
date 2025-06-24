@@ -531,8 +531,8 @@ Key derivation method with support for the following pseudorandom functions:
    - PBKDF2_SHA256 - PBKDF2_HMAC-SHA256
    - ARGON2I - OpenSSL version >= 3.2
    - ARGON2ID - OpenSSL version >= 3.2
-   - SCRYPT - using parameters N: work factor (power of 2), r: block size, p: parallelism
-     128 x N x r x p = memory cost in bytes. 
+   - SCRYPT - using parameters N: work factor (power of 2) default: 16384(2^14), 
+     r: block size default 8, p: parallelism default 1. 128 x N x r x p = memcost in bytes. 
 
 
 Parameters:
@@ -551,7 +551,8 @@ Parameters:
      - pbkdf2_sha256: 300000
      - argon2i: 10
      - argon2id: 10
-     - scrypt: N: 16384(2^14), r: 8, p: 1 = 128 * 16384* 8 * 1 = 16777216 bytes (16 MiB) RAM 
+     - scrypt: workfactor N: 16384(2^14), r: 8, p: 1 = 
+       128 * 16384 * 8 * 1 = 16777216 bytes (16 MiB) RAM of memcost
 
 Returns:
   - hash_token: string - format *"algorithm$iterations$b64_salt$b64_pw_hash"*.
@@ -568,7 +569,7 @@ Example:
 ---@param password string Password to hash. Must be 8 or more characters.
 ---@param salt string? Salt to use for hashing, or nil to generate a secure random salt.
 ---@param algorithm string? Optional hashing algorithm, default pbkdf2_sha512
----@param iterations number? Optional number of iterations.
+---@param iterations number? Optional iterations (workfactor for SCRYPT being a power of 2)
 ---@return string hash_token format of "algorithm$iterations$b64_salt$b64_pw_hash"
 function NASCrypto.hash_password(password, salt, algorithm, iterations)
   if password == nil or type(password) ~= "string" or #password < 8 then
@@ -619,8 +620,22 @@ function NASCrypto.hash_password(password, salt, algorithm, iterations)
     kdf_options.type = "argon2id"
     kdf_options.outlen = 32
     kdf_options.iter = iterations
+  elseif algorithm == "scrypt" then
+    -- Default scrypt workfactor: 16384, block size: 8, parallelism factor: 1
+    -- Memcost = 128 * 16384 * 8 * 1 = 16777216 bytes (16 MiB) RAM
+    iterations = iterations or 16384
+    -- in case iterations passed in, check workfactor is a power of 2
+    local log2 = math.log(iterations, 2)
+    if (math.floor(log2) ~= log2) or iterations < 2 then
+      error("scrypt iterations (workfactor) must be a positive power of 2")
+    end
+    kdf_options.type = "scrypt"
+    kdf_options.outlen = 32
+    kdf_options.N = iterations
+    kdf_options.r = 8
+    kdf_options.p = 1
   else
-    error("Unsupported algorithm: " .. algorithm)
+    error("unsupported algorithm: " .. algorithm)
   end
 
   kdf_options.pass = password

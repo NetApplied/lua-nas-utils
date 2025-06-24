@@ -213,10 +213,28 @@ function Test_NASCrypto.test_hash_password()
   lu.assertError(nas_crypto.hash_password, "short", salt)
   lu.assertError(nas_crypto.hash_password, pw, 12345)
 
+  
+end
+
+function Test_NASCrypto.test_hash_password_argon2()
   -- Test Argon2id support - only supported on OpenSSL 3.2 or greater
-  hash = nas_crypto.hash_password(pw, nil, "argon2id" )
+
+  local pw = "mysecretpw"
+  local hash = nas_crypto.hash_password(pw, nil, "argon2id" )
   lu.assertStrContains(hash, "argon2id$")
   lu.assertTrue(nas_crypto.hash_password_verify(pw, hash))
+
+end
+
+function Test_NASCrypto.test_hash_password_scrypt()
+  local pw = "mysecretpw"
+  local hash = nas_crypto.hash_password(pw, nil, "scrypt" )
+  lu.assertStrContains(hash, "scrypt$")
+  lu.assertTrue(nas_crypto.hash_password_verify(pw, hash))
+
+  -- Test invalid workfactor
+  lu.assertError(nas_crypto.hash_password, pw, nil, "scrypt", 12345)
+
 end
 
 function Test_NASCrypto.test_hash_password_verify()
