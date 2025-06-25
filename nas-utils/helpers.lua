@@ -3,7 +3,7 @@
 local NASHelpers      = {}
 
 NASHelpers._AUTHORS   = "Michael Stephan"
-NASHelpers._VERSION   = "0.3.1-1"
+NASHelpers._VERSION   = "0.3.2-1"
 NASHelpers._LICENSE   = "MIT License"
 NASHelpers._COPYRIGHT = "Copyright (c) 2025 Net Applied Solutions, LLC"
 

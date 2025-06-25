@@ -5,7 +5,7 @@ local NASStrings      = {}
 NASStrings._AUTHORS   = "liaozhaoyan, Michael Stephan"
 NASStrings._VERSION   = "0.3.2-1"
 NASStrings._LICENSE   = "MIT License"
-NASStrings._COPYRIGHT = "Copyright (c) 2023 liaozhaoyan"
+NASStrings._COPYRIGHT = "Copyright (c) 2023 liaozhaoyan, (c) 2025 Net Applied Solutions"
 
 
 local sub = string.sub

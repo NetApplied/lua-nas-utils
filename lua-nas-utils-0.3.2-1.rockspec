@@ -7,7 +7,11 @@ source = {
 description = {
    homepage = "https://github.com/NetApplied/lua-nas-utils",
    license = "MIT",
-   summary = "Lua utility for working with cryptography, dates and time, strings, etc."
+   summary = "Lua utility modules for working with cryptography, datetime, strings, etc.",
+   detailed = [[
+      A collection of Lua utility modules for NAS systems, providing helpers for 
+      cryptography, datetime, string manipulation, logging, JWT, and more.
+   ]]
 }
 dependencies = {
    "lua >= 5.1",

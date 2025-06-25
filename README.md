@@ -1,6 +1,6 @@
 # lua-nas-utils
 
-A collection of Lua utility modules for NAS systems, providing helpers for cryptography, string manipulation, logging, JWT, and more.
+A collection of Lua utility modules for NAS systems, providing helpers for cryptography, datetime, string manipulation, logging, JWT, and more.
 
 *Note: This is a pre-1.0.0 release intended for initial development purposes. The public API is subject to change without notice and should not be considered stable.*
 
